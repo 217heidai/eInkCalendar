@@ -1,0 +1,50 @@
+#ifndef _BITMAP_H_
+#define _BITMAP_H_
+
+extern const unsigned char Bitmap_xztq[];
+extern const unsigned char Bitmap_qt[];
+extern const unsigned char Bitmap_dy[];
+extern const unsigned char Bitmap_yt[];
+extern const unsigned char Bitmap_zheny[];
+extern const unsigned char Bitmap_lzy[];
+extern const unsigned char Bitmap_lzybbb[];
+extern const unsigned char Bitmap_xy[];
+extern const unsigned char Bitmap_zhongy[];
+extern const unsigned char Bitmap_dayu[];
+extern const unsigned char Bitmap_by[];
+extern const unsigned char Bitmap_dby[];
+extern const unsigned char Bitmap_tdby[];
+extern const unsigned char Bitmap_dongy[];
+extern const unsigned char Bitmap_yjx[];
+extern const unsigned char Bitmap_zhenx[];
+extern const unsigned char Bitmap_xx[];
+extern const unsigned char Bitmap_zhongx[];
+extern const unsigned char Bitmap_dx[];
+extern const unsigned char Bitmap_bx[];
+extern const unsigned char Bitmap_fc[];
+extern const unsigned char Bitmap_ys[];
+extern const unsigned char Bitmap_scb[];
+extern const unsigned char Bitmap_w[];
+extern const unsigned char Bitmap_m[];
+extern const unsigned char Bitmap_f[];
+extern const unsigned char Bitmap_jf[];
+extern const unsigned char Bitmap_ljf[];
+extern const unsigned char Bitmap_wz[];
+extern const unsigned char Bitmap_qt_ws[];
+extern const unsigned char Bitmap_yt_wz[];
+extern const unsigned char Bitmap_dy_wz[];
+extern const unsigned char Bitmap_zy_wz[];
+extern const unsigned char Bitmap_zx_wz[];
+extern const unsigned char Bitmap_weizhi[];
+extern const unsigned char Bitmap_zhuangtai[];
+extern const unsigned char Bitmap_gengxing[];
+extern const unsigned char Bitmap_riqi[];
+extern const unsigned char Bitmap_batlow[];
+extern const unsigned char Bitmap_humidity[];
+extern const unsigned char Bitmap_fx[];
+extern const unsigned char Bitmap_rdfb[];
+extern const unsigned char Bitmap_yt_ws[];
+extern const unsigned char Bitmap_dy_ws[];
+extern const unsigned char Bitmap_zy_ws[];
+extern const unsigned char Bitmap_zx_ws[];
+#endif
