@@ -1,48 +1,3 @@
-/*
-   display_partialLine()
-   发送局部刷新的显示信息到屏幕
-
-   line        行数（1-15）
-   z           字符内容
-   width_state 整行刷新 1-是 0-仅刷新字符长度
-*/
-extern void display_partialLine(uint8_t line, String zf, boolean width_state = 1)
-{
-  const char* character = zf.c_str(); //String转换char
-  u8g2Fonts.setFont(chinese_city_gb2312);
-  uint16_t zf_width = u8g2Fonts.getUTF8Width(character); //获取字符的长度
-  uint16_t x = (SCREEN_WIDTH / 2) - (zf_width / 2);   //计算字符居中的X坐标（屏幕宽度/2-字符宽度/2）
-
-  if (width_state == 0)display.setPartialWindow(x, (line-1) * FONT_SIZE_CHINESE_SPACING, zf_width, FONT_SIZE_CHINESE_SPACING);  //仅刷新字符的长度
-  else display.setPartialWindow(0, (line-1) * FONT_SIZE_CHINESE_SPACING, SCREEN_WIDTH, FONT_SIZE_CHINESE_SPACING);           //整行刷新
-  display.firstPage();
-  do
-  {
-    u8g2Fonts.setCursor(x, line * FONT_SIZE_CHINESE_SPACING - (FONT_SIZE_CHINESE_SPACING- FONT_SIZE_CHINESE));
-    u8g2Fonts.print(character);
-  }
-  while (display.nextPage());
-}
-
-static void display_Bitmap_Setup(void) //显示开机图片
-{
-  display.setPartialWindow(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH); //设置局部刷新窗口
-  display.firstPage();
-  do
-  {
-    //显示开机图片
-    display.drawInvertedBitmap((SCREEN_WIDTH - 296)/2, (SCREEN_HEIGTH - 128)/2, Bitmap_xztq, 296, 128, COLOR_BLACK);
-
-    //显示WiFi连接信息
-    String disp = "Connecting to WiFi[" + String(ssid) + "]...";
-    u8g2Fonts.setFont(chinese_city_gb2312);
-    const char *character = disp.c_str();
-    uint8_t dataWidth = u8g2Fonts.getUTF8Width(character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING- FONT_SIZE_CHINESE), character);
-  }
-  while (display.nextPage());
-}
-
 static void updateMode(void)
 {
   const char* updatemode;
@@ -77,7 +32,6 @@ extern void display_setup(void)
   //display_test_number();
   //display_test_weather();
   //display_test_str();
-  //display_test_line();
 }
 
 static void GetWeekday(char *pszWeekday, uint8_t nWeekday)
@@ -200,14 +154,13 @@ static void RefreshDateTime(void)
   }
 }
 
-static void display_icon_weather(uint16_t lx, uint16_t ly, char *weatherCode) //天气图标显示
+static void display_icon_weather(uint16_t x, uint16_t y, char *weatherCode) //天气图标显示
 {
-  uint16_t x = lx;
-  uint16_t y = ly;
   String code = weatherCode;
-  if (code == "0")      display.drawInvertedBitmap(x, y + 5, Bitmap_qt, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
+
+  if (code == "0")      display.drawInvertedBitmap(x, y + 5, Bitmap_qt, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_RED);
   else if (code == "1") display.drawInvertedBitmap(x, y, Bitmap_qt_ws, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "2") display.drawInvertedBitmap(x, y + 5, Bitmap_qt, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
+  else if (code == "2") display.drawInvertedBitmap(x, y + 5, Bitmap_qt, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_RED);
   else if (code == "3") display.drawInvertedBitmap(x, y, Bitmap_qt_ws, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
   else if (code == "4") display.drawInvertedBitmap(x, y, Bitmap_dy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
   else if (code == "5") display.drawInvertedBitmap(x, y, Bitmap_dy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
@@ -241,8 +194,6 @@ static void display_icon_weather(uint16_t lx, uint16_t ly, char *weatherCode) //
   else if (code == "33") display.drawInvertedBitmap(x, y, Bitmap_f, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
   else if (code == "34") display.drawInvertedBitmap(x, y, Bitmap_jf, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
   else if (code == "35") display.drawInvertedBitmap(x, y, Bitmap_rdfb, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  //else if (code == 37) display.drawInvertedBitmap(x,y, Bitmap_dy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  //else if (code == 38) display.drawInvertedBitmap(x,y, Bitmap_dy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
   else display.drawInvertedBitmap(x, y, Bitmap_wz, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
 }
 
@@ -329,7 +280,14 @@ static void RefreshFutureWeather(void)
     //设置正常字体
     u8g2Fonts.setFont(chinese_city_gb2312);
     //天气
-    sprintf(disp, "%s转%s", stFutureWeather.date0_text_day, stFutureWeather.date0_text_night);
+    if(String(stFutureWeather.date0_text_day) == String(stFutureWeather.date0_text_night))
+    {
+      sprintf(disp, "%s", stFutureWeather.date0_text_day);
+    }
+    else
+    {
+      sprintf(disp, "%s转%s", stFutureWeather.date0_text_day, stFutureWeather.date0_text_night);
+    }
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING;
     u8g2Fonts.drawUTF8(x, temp_y, disp);
@@ -416,15 +374,6 @@ extern void display_MainPage(void)
     RefreshHitokoto();//刷新一言
   }
   while (display.nextPage());
-}
-
-static void display_test_line(void)
-{
-  String str = "今天的天气真不错";
-  for(int i = 1; i < SCREEN_HEIGTH/FONT_SIZE_CHINESE_SPACING + 1; i++)
-  {
-    display_partialLine(i, str);
-  }
 }
 
 static void display_test_str(void)

@@ -12,6 +12,10 @@
 
 #include "bitmap.h"
 
+//按键定义
+#define KEY_UP    5
+
+//U8g2显示
 U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
 
 //屏幕大小 4.2寸 400x300
@@ -62,7 +66,7 @@ const String url_Workday = "https://api.xlongwei.com/service/datetime/isworkday.
 const String url_Holiday = "https://api.xlongwei.com/service/datetime/holiday.json"; //节假日信息
 const String url_Convert = "https://api.xlongwei.com/service/datetime/convert.json"; //农历信息
 
-// 心知天气KEY
+// 心知天气
 const String url_ActualWeather = "https://api.seniverse.com/v3/weather/now.json?key={个人KEY}&location=上海&language=zh-Hans&unit=c";
 const String url_FutureWeather = "https://api.seniverse.com/v3/weather/daily.json?key={个人KEY}&location=上海&language=zh-Hans&unit=c&start=0&days=3";
 const String url_LifeIndex = "https://api.seniverse.com/v3/life/suggestion.json?key={个人KEY}&location=上海&language=zh-Hans";
@@ -173,11 +177,14 @@ void setup()
 
   display_setup(); //开机信息显示
 
+  //led_controller(1); //点亮led
+
   if(!connectToWifi()) goto ESP_SLEEP;//连接wifi
 
   display_MainPage(); //显示主页
 
 ESP_SLEEP:
+  //led_controller(0); //熄灭led
   esp_sleep(REFRESH_FREQUENCY); //休眠REFRESH_FREQUENCY后重启
 }
 

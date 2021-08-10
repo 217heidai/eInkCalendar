@@ -15,30 +15,7 @@ static bool ParseActualWeather(String content, ActualWeather *pstActualWeather)
   if (json["status_code"].isNull() == 0) //检查到不为空
   {
     strcpy(pstActualWeather->status_code, json["status_code"]);
-    String z;
-    if (String(pstActualWeather->status_code) == "AP010001") z = "API 请求参数错误" ;
-    else if (String(pstActualWeather->status_code) == "AP010002") z = "没有权限访问这个 API 接口" ;
-    else if (String(pstActualWeather->status_code) == "AP010003") z = "API 密钥 key 错误" ;
-    else if (String(pstActualWeather->status_code) == "AP010004") z = "签名错误" ;
-    else if (String(pstActualWeather->status_code) == "AP010005") z = "你请求的 API 不存在" ;
-    else if (String(pstActualWeather->status_code) == "AP010006") z = "没有权限访问这个地点" ;
-    else if (String(pstActualWeather->status_code) == "AP010007") z = "JSONP 请求需要使用签名验证方式" ;
-    else if (String(pstActualWeather->status_code) == "AP010008") z = "没有绑定域名" ;
-    else if (String(pstActualWeather->status_code) == "AP010009") z = "API 请求的 user-agent 与你设置的不一致" ;
-    else if (String(pstActualWeather->status_code) == "AP010010") z = "没有这个地点";
-    else if (String(pstActualWeather->status_code) == "AP010011") z = "无法查找到指定 IP 地址对应的城市" ;
-    else if (String(pstActualWeather->status_code) == "AP010012") z = "你的服务已经过期" ;
-    else if (String(pstActualWeather->status_code) == "AP010013") z = "访问量余额不足" ;
-    else if (String(pstActualWeather->status_code) == "AP010014") z = "访问频率超过限制" ;
-    else if (String(pstActualWeather->status_code) == "AP010015") z = "暂不支持该城市的车辆限行信息" ;
-    else if (String(pstActualWeather->status_code) == "AP010016") z = "暂不支持该城市的潮汐数据" ;
-    else if (String(pstActualWeather->status_code) == "AP010017") z = "请求的坐标超出支持的范围" ;
-    else if (String(pstActualWeather->status_code) == "AP100001") z = "心知系统内部错误：数据缺失" ;
-    else if (String(pstActualWeather->status_code) == "AP100002") z = "心知系统内部错误：数据错误" ;
-    else if (String(pstActualWeather->status_code) == "AP100003") z = "心知系统内部错误：服务内部错误" ;
-    else if (String(pstActualWeather->status_code) == "AP100004") z = "心知系统内部错误：网关错误" ;
-    else z = "其他错误" + String(pstActualWeather->status_code);
-    String errmsg = "实况天气获取异常: [" + String(pstActualWeather->status_code) + "]" + z;
+    String errmsg = "实况天气获取异常: " + String(pstActualWeather->status_code);
     Serial.println(errmsg.c_str());
     return false;
   }
@@ -77,30 +54,7 @@ static bool ParseFutureWeather(String content, FutureWeather *pstFutureWeather)
   if (json["status_code"].isNull() == 0) //检查到不为空
   {
     strcpy(pstFutureWeather->status_code, json["status_code"]);
-    String z;
-    if (String(pstFutureWeather->status_code) == "AP010001") z = "API 请求参数错误" ;
-    else if (String(pstFutureWeather->status_code) == "AP010002") z = "没有权限访问这个 API 接口" ;
-    else if (String(pstFutureWeather->status_code) == "AP010003") z = "API 密钥 key 错误" ;
-    else if (String(pstFutureWeather->status_code) == "AP010004") z = "签名错误" ;
-    else if (String(pstFutureWeather->status_code) == "AP010005") z = "你请求的 API 不存在" ;
-    else if (String(pstFutureWeather->status_code) == "AP010006") z = "没有权限访问这个地点";
-    else if (String(pstFutureWeather->status_code) == "AP010007") z = "JSONP 请求需要使用签名验证方式" ;
-    else if (String(pstFutureWeather->status_code) == "AP010008") z = "没有绑定域名" ;
-    else if (String(pstFutureWeather->status_code) == "AP010009") z = "API 请求的 user-agent 与你设置的不一致" ;
-    else if (String(pstFutureWeather->status_code) == "AP010010") z = "没有这个地点";
-    else if (String(pstFutureWeather->status_code) == "AP010011") z = "无法查找到指定 IP 地址对应的城市" ;
-    else if (String(pstFutureWeather->status_code) == "AP010012") z = "你的服务已经过期" ;
-    else if (String(pstFutureWeather->status_code) == "AP010013") z = "访问量余额不足" ;
-    else if (String(pstFutureWeather->status_code) == "AP010014") z = "访问频率超过限制" ;
-    else if (String(pstFutureWeather->status_code) == "AP010015") z = "暂不支持该城市的车辆限行信息" ;
-    else if (String(pstFutureWeather->status_code) == "AP010016") z = "暂不支持该城市的潮汐数据" ;
-    else if (String(pstFutureWeather->status_code) == "AP010017") z = "请求的坐标超出支持的范围" ;
-    else if (String(pstFutureWeather->status_code) == "AP100001") z = "心知系统内部错误：数据缺失" ;
-    else if (String(pstFutureWeather->status_code) == "AP100002") z = "心知系统内部错误：数据错误" ;
-    else if (String(pstFutureWeather->status_code) == "AP100003") z = "心知系统内部错误：服务内部错误" ;
-    else if (String(pstFutureWeather->status_code) == "AP100004") z = "心知系统内部错误：网关错误" ;
-    else z = "其他错误" + String(pstFutureWeather->status_code);
-    String errmsg = "未来天气获取异常: [" + String(pstFutureWeather->status_code) + "]" + z;
+    String errmsg = "未来天气获取异常: " + String(pstFutureWeather->status_code);
     Serial.println(errmsg.c_str());
     return false;
   }
@@ -186,30 +140,7 @@ static bool ParseLifeIndex(String content, LifeIndex *pstLifeIndex)
   if (json["status_code"].isNull() == 0) //检查到不为空
   {
     strcpy(pstLifeIndex->status_code, json["status_code"]);
-    String z;
-    if (String(pstLifeIndex->status_code) == "AP010001") z = "API 请求参数错误" ;
-    else if (String(pstLifeIndex->status_code) == "AP010002") z = "没有权限访问这个 API 接口" ;
-    else if (String(pstLifeIndex->status_code) == "AP010003") z = "API 密钥 key 错误" ;
-    else if (String(pstLifeIndex->status_code) == "AP010004") z = "签名错误" ;
-    else if (String(pstLifeIndex->status_code) == "AP010005") z = "你请求的 API 不存在" ;
-    else if (String(pstLifeIndex->status_code) == "AP010006") z = "没有权限访问这个地点";
-    else if (String(pstLifeIndex->status_code) == "AP010007") z = "JSONP 请求需要使用签名验证方式" ;
-    else if (String(pstLifeIndex->status_code) == "AP010008") z = "没有绑定域名" ;
-    else if (String(pstLifeIndex->status_code) == "AP010009") z = "API 请求的 user-agent 与你设置的不一致" ;
-    else if (String(pstLifeIndex->status_code) == "AP010010") z = "没有这个地点";
-    else if (String(pstLifeIndex->status_code) == "AP010011") z = "无法查找到指定 IP 地址对应的城市" ;
-    else if (String(pstLifeIndex->status_code) == "AP010012") z = "你的服务已经过期" ;
-    else if (String(pstLifeIndex->status_code) == "AP010013") z = "访问量余额不足" ;
-    else if (String(pstLifeIndex->status_code) == "AP010014") z = "访问频率超过限制" ;
-    else if (String(pstLifeIndex->status_code) == "AP010015") z = "暂不支持该城市的车辆限行信息" ;
-    else if (String(pstLifeIndex->status_code) == "AP010016") z = "暂不支持该城市的潮汐数据" ;
-    else if (String(pstLifeIndex->status_code) == "AP010017") z = "请求的坐标超出支持的范围" ;
-    else if (String(pstLifeIndex->status_code) == "AP100001") z = "心知系统内部错误：数据缺失" ;
-    else if (String(pstLifeIndex->status_code) == "AP100002") z = "心知系统内部错误：数据错误" ;
-    else if (String(pstLifeIndex->status_code) == "AP100003") z = "心知系统内部错误：服务内部错误" ;
-    else if (String(pstLifeIndex->status_code) == "AP100004") z = "心知系统内部错误：网关错误" ;
-    else z = "其他错误" + String(pstLifeIndex->status_code);
-    String errmsg = "天气指数获取异常: [" + String(pstLifeIndex->status_code) + "]" + z;
+    String errmsg = "天气指数获取异常: " + String(pstLifeIndex->status_code);
     Serial.println(errmsg.c_str());
     return false;
   }

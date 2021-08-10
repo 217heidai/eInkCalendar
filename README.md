@@ -17,7 +17,16 @@
 2. 采集、展示环境温度、湿度；
 3. 翻页展示更多功能...
 
+## 电路图
+1. 电路图`doc/SCH_三色墨水屏日历_2021-07-23.json`，请使用 立创EDA 打开
+
 ## 代码编译说明
+### 依赖库
+1. GxEPD2
+2. U8g2_for_Adafruit_GFX
+3. NTPClient
+4. ArduinoJson
+### 配置修改
 1. `eInkCalendar.ino`中修改 WiFi 信息，设置 `ssid`、`password`;
 2. `eInkCalendar.ino`中修改心知天气 API KEY 信息，设置 `url_FutureWeather`、`url_LifeIndex`;
 3. `eInkCalendar.ino`中修改位置信息，支持到城市级别，设置 `url_FutureWeather`、`url_LifeIndex`。

@@ -127,13 +127,13 @@ const uint16_t mon_yday[][13] =
 };
  
 //判断一个年份是否为闰年，是就返回1，不是就返回0
-bool isLeapYear(uint16_t year)
+static bool isLeapYear(uint16_t year)
 {
   return( (year%4 == 0 && year%100 != 0) || (year%400 == 0) );
 }
  
 //获取一年的天数
-uint16_t getDaysForYear(uint16_t year)
+static uint16_t getDaysForYear(uint16_t year)
 {
   return (isLeapYear(year)?366:365);
 }
