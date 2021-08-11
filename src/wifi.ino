@@ -40,10 +40,8 @@ extern String callHttps(String url)
 
   HTTPClient https;
 
-  //Serial.print("[HTTPS] begin...\n");
+  Serial.printf("[HTTPS] begin... url: %s\n", url.c_str());
   if (https.begin(*client, url)) {  // HTTPS
-
-    //Serial.print("[HTTPS] GET...\n");
     // start connection and send HTTP header
     int httpCode = https.GET();
     Serial.printf("[HTTPS] GET... code: %d\n", httpCode);

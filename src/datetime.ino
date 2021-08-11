@@ -2,6 +2,7 @@
 static bool GetNTPTime(unsigned long *pEpochTime, uint8_t *pweek)
 {
   uint8_t update_count = 0;
+  uint8_t hour;
 
   WiFiUDP ntpUDP;
   NTPClient timeClient(ntpUDP, "time.pool.aliyun.com", 8 * 3600, 10); //udp，服务器地址，时间偏移量，更新间隔
@@ -26,12 +27,11 @@ static bool GetNTPTime(unsigned long *pEpochTime, uint8_t *pweek)
   Serial.println(timeClient.getFormattedTime());
   *pEpochTime = timeClient.getEpochTime();
   *pweek = timeClient.getDay();
-  RTC_hour = timeClient.getHours();
-  if ((RTC_hour >= 8)&&(RTC_hour <= 20)) //天气预报“今天白天”是指上午8：00到晚上20：00这12个小时；“今天夜间”指20：00到次日早上8：00这12个小时。
+  hour = timeClient.getHours();
+  if ((hour >= 8)&&(hour <= 20)) //天气预报“今天白天”是指上午8：00到晚上20：00这12个小时；“今天夜间”指20：00到次日早上8：00这12个小时。
   {
     isNight = false;
   }
-  ESP.rtcUserMemoryWrite(RTCdz_hour, &RTC_hour, sizeof(RTC_hour));
   timeClient.end();
   return true;
 }

@@ -197,59 +197,9 @@ static void display_icon_weather(uint16_t x, uint16_t y, char *weatherCode) //�
   else display.drawInvertedBitmap(x, y, Bitmap_wz, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
 }
 
-static void RefreshActualWeather(void)
+static void RefreshWeather(void)
 {
-  ActualWeather stActualWeather;
-  uint16_t dataWidth;
-  char disp[120];
-  uint16_t x = SCREEN_WIDTH - (ICON_SIZE_WEATHER + (SCREEN_WIDTH - FONT_SIZE_NUMBER * 2 - ICON_SIZE_WEATHER * 2)/4); //x起始位置
-  uint16_t y = (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2; //y起始位置
-
-  memset(&stActualWeather, 0, sizeof(stActualWeather));
-  if (GetActualWeather(&stActualWeather))
-  {
-    //天气图标
-    display_icon_weather(x, y, stActualWeather.weather_code);
-
-    //设置为大字体
-    u8g2Fonts.setFont(u8g2_mfyuanhei_16_gb2312);
-    //位置
-    sprintf(disp, "%s", stActualWeather.city);
-    dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE, disp);
-
-    //设置正常字体
-    u8g2Fonts.setFont(chinese_city_gb2312);
-
-    //位置
-    //sprintf(disp, "%s", stActualWeather.city);
-    //dataWidth = u8g2Fonts.getUTF8Width(disp);
-    //u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth - FONT_SIZE_CHINESE, FONT_SIZE_CHINESE_SPACING, disp);
-
-    //位置图标
-    //display.drawInvertedBitmap(SCREEN_WIDTH - FONT_SIZE_CHINESE + 2, (FONT_SIZE_CHINESE_SPACING - 13)/2 + 4, Bitmap_weizhi, 13, 13, COLOR_BLACK);
-    //刷新时间
-    //String minutes_hours;
-    //for (uint8_t i = 11; i < 16; i++) minutes_hours += stActualWeather.last_update[i];
-    //dataWidth = u8g2Fonts.getUTF8Width(minutes_hours.c_str());
-    //u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth - FONT_SIZE_CHINESE, FONT_SIZE_CHINESE_SPACING * 2 + 4, minutes_hours.c_str());
-    //刷新时间图标
-    //display.drawInvertedBitmap(SCREEN_WIDTH - FONT_SIZE_CHINESE + 2, FONT_SIZE_CHINESE_SPACING + (FONT_SIZE_CHINESE_SPACING - 13)/2 + 7, Bitmap_gengxing, 13, 13, COLOR_BLACK);
-    
-    //天气+温度
-    sprintf(disp, "%s %s", stActualWeather.weather_name, stActualWeather.temp);
-    dataWidth = u8g2Fonts.getUTF8Width(disp);
-    uint16_t temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING;
-    u8g2Fonts.drawUTF8(x, temp_y, disp);
-    //画圆圈
-    uint16_t circle_x = x + dataWidth + 4; //计算圈圈的位置
-    display.drawCircle(circle_x, temp_y - FONT_SIZE_CHINESE_SPACING + 5, 2, 0);
-  }
-}
-
-static void RefreshFutureWeather(void)
-{
-  FutureWeather stFutureWeather;
+  Weather stWeather;
   uint16_t dataWidth;
   char disp[120];
   uint16_t x = 300; //x起始位置
@@ -257,43 +207,43 @@ static void RefreshFutureWeather(void)
   uint16_t temp_x, temp_y;
   uint16_t circle_x;
 
-  memset(&stFutureWeather, 0, sizeof(stFutureWeather));
-  if (GetFutureWeather(&stFutureWeather))
+  memset(&stWeather, 0, sizeof(stWeather));
+  if (GetWeather(&stWeather))
   {
     //设置为大字体
     u8g2Fonts.setFont(u8g2_mfyuanhei_16_gb2312);
     //位置
-    sprintf(disp, "%s", stFutureWeather.city);
+    sprintf(disp, "%s", stWeather.city);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE, disp);
 
     //天气图标
     if(!isNight)
     {
-      display_icon_weather(x, y, stFutureWeather.date0_code_day);
+      display_icon_weather(x, y, stWeather.date0_code_day);
     }
     else
     {
-      display_icon_weather(x, y, stFutureWeather.date0_code_night);
+      display_icon_weather(x, y, stWeather.date0_code_night);
     }
 
     //设置正常字体
     u8g2Fonts.setFont(chinese_city_gb2312);
     //天气
-    if(String(stFutureWeather.date0_text_day) == String(stFutureWeather.date0_text_night))
+    if(String(stWeather.date0_text_day) == String(stWeather.date0_text_night))
     {
-      sprintf(disp, "%s", stFutureWeather.date0_text_day);
+      sprintf(disp, "%s", stWeather.date0_text_day);
     }
     else
     {
-      sprintf(disp, "%s转%s", stFutureWeather.date0_text_day, stFutureWeather.date0_text_night);
+      sprintf(disp, "%s转%s", stWeather.date0_text_day, stWeather.date0_text_night);
     }
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING;
     u8g2Fonts.drawUTF8(x, temp_y, disp);
 
     //最低温度
-    sprintf(disp, "%s", stFutureWeather.date0_low);
+    sprintf(disp, "%s", stWeather.date0_low);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING*2;
     u8g2Fonts.drawUTF8(x, temp_y, disp);
@@ -302,7 +252,7 @@ static void RefreshFutureWeather(void)
     circle_x = temp_x + 3; //计算圈圈的位置
     display.drawCircle(circle_x, temp_y - FONT_SIZE_CHINESE_SPACING + 5, 2, 0);
     //最高温度
-    sprintf(disp, " ~ %s", stFutureWeather.date0_high);
+    sprintf(disp, " ~ %s", stWeather.date0_high);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8(temp_x, temp_y, disp);
     temp_x = temp_x + dataWidth;
@@ -368,8 +318,7 @@ extern void display_MainPage(void)
   do
   {
     RefreshDateTime();//刷新日期时间
-    //RefreshActualWeather();//刷新实况天气
-    RefreshFutureWeather();//刷新未来天气
+    RefreshWeather();//刷新天气
     RefreshLifeIndex();//刷新天气指数
     RefreshHitokoto();//刷新一言
   }

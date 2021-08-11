@@ -30,20 +30,12 @@ U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
 
 //GB2312字库
 #include "gb2312.c" //13x13
-//#include "u8g2_deng_56_temperature.c"    //温度显示字体
 #include "u8g2_mfxinran_92_number.c"    //80*100
-//#include "u8g2_mfyuehei_12_gb2312.c"    //16x16
-//#include "u8g2_mfyuehei_14_gb2312.c"    //19x19
 #include "u8g2_mfyuanhei_16_gb2312.c"   //21x21
-//#include "u8g2_mfyuehei_18_gb2312.c"    //24x24
 //声明外部变量
 extern const uint8_t chinese_city_gb2312[239032] PROGMEM U8G2_FONT_SECTION("chinese_city_gb2312");
-//extern const uint8_t u8g2_deng_56_temperature[1423] PROGMEM U8G2_FONT_SECTION("u8g2_deng_56_temperature");
 extern const uint8_t u8g2_mfxinran_92_number[1240] PROGMEM U8G2_FONT_SECTION("u8g2_mfxinran_92_number");
-//extern const uint8_t u8g2_mfyuehei_12_gb2312[310408] PROGMEM U8G2_FONT_SECTION("u8g2_mfyuehei_12_gb2312");
-// const uint8_t u8g2_mfyuehei_14_gb2312[367573] PROGMEM U8G2_FONT_SECTION("u8g2_mfyuehei_14_gb2312");
 extern const uint8_t u8g2_mfyuanhei_16_gb2312[334933] PROGMEM U8G2_FONT_SECTION("u8g2_mfyuanhei_16_gb2312");
-//extern const uint8_t u8g2_mfyuehei_18_gb2312[527573] PROGMEM U8G2_FONT_SECTION("u8g2_mfyuehei_18_gb2312");
 //字体大小
 #define FONT_SIZE_NUMBER  100 //80*100
 #define FONT_SIZE_CHINESE 13  //根据选择的字体大小设置
@@ -67,8 +59,7 @@ const String url_Holiday = "https://api.xlongwei.com/service/datetime/holiday.js
 const String url_Convert = "https://api.xlongwei.com/service/datetime/convert.json"; //农历信息
 
 // 心知天气
-const String url_ActualWeather = "https://api.seniverse.com/v3/weather/now.json?key={个人KEY}&location=上海&language=zh-Hans&unit=c";
-const String url_FutureWeather = "https://api.seniverse.com/v3/weather/daily.json?key={个人KEY}&location=上海&language=zh-Hans&unit=c&start=0&days=3";
+const String url_Weather = "https://api.seniverse.com/v3/weather/daily.json?key={个人KEY}&location=上海&language=zh-Hans&unit=c&start=0&days=3";
 const String url_LifeIndex = "https://api.seniverse.com/v3/life/suggestion.json?key={个人KEY}&location=上海&language=zh-Hans";
 
 // 一言
@@ -96,19 +87,8 @@ typedef struct _DateTime
   bool isWorkday; //是否工作日
 }DateTime;
 
-//今日天气
-typedef struct _ActualWeather
-{
-  char status_code[64];  //错误代码
-  char city[16];         //城市名称
-  char weather_name[16]; //天气现象名称
-  char weather_code[4];  //天气现象代码
-  char temp[5];          //温度
-  char last_update[25];  //最后更新时间
-}ActualWeather;
-
-//未来天气
-typedef struct _FutureWeather
+//天气
+typedef struct _Weather
 {
   char status_code[64];       //错误代码
   char city[16];              //城市名称
@@ -139,7 +119,7 @@ typedef struct _FutureWeather
   char date2_code_night[4];   //晚上天气现象代码
   char date2_high[5];         //最高温度
   char date2_low[5];          //最低温度
-}FutureWeather;
+}Weather;
 
 //生活指数
 typedef struct _LifeIndex
@@ -156,14 +136,6 @@ typedef struct _Hitokoto
 }Hitokoto;
 const String DefaultHitokoto = "当你怀疑人生的时候，其实这就是你的人生。"; //默认信息
 
-//RTC临时数据
-#define RTCdz_hour 0           //小时地址
-#define RTCdz_night_count 1    //夜间计数地址
-#define RTCdz_peiwang_state 2  //配网状态地址
-uint32_t RTC_hour = 100;        //小时
-uint32_t RTC_night_count = 0;   //24-6点，夜间不更新计数
-int32_t night_count_max = 0;    //需要跳过几次
-
 void setup()
 {
   Serial.begin(115200);
@@ -177,6 +149,8 @@ void setup()
 
   display_setup(); //开机信息显示
 
+  Serial.printf("剩余堆空间：%d\n", ESP.getFreeHeap());//查看堆空间
+
   //led_controller(1); //点亮led
 
   if(!connectToWifi()) goto ESP_SLEEP;//连接wifi
@@ -185,6 +159,7 @@ void setup()
 
 ESP_SLEEP:
   //led_controller(0); //熄灭led
+  Serial.printf("剩余堆空间：%d\n", ESP.getFreeHeap());//查看堆空间
   esp_sleep(REFRESH_FREQUENCY); //休眠REFRESH_FREQUENCY后重启
 }
 
