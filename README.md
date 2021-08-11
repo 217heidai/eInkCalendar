@@ -2,8 +2,8 @@
 基于4.2寸三色墨水屏及ESP8266实现的天气日历。心血来潮，咸鱼上捡了一块墨水屏，参考了一些大佬的代码，写了一个天气日历。
 
 ## 展示
-![workday](../eInkCalendar/doc/workday.jpeg)
-![holiday](../eInkCalendar/doc/holiday.jpeg)
+![workday](https://raw.githubusercontent.com/217heidai/eInkCalendar/main/doc/workday.jpeg)
+![holiday](https://raw.githubusercontent.com/217heidai/eInkCalendar/main/doc/holiday.jpeg)
 
 ## 功能
 1. 日历信息展示，包括日期、星期、农历、节假日；
