@@ -1,21 +1,3 @@
-static void updateMode(void)
-{
-  const char* updatemode;
-  if (display.epd2.hasFastPartialUpdate)
-  {
-    updatemode = "快速局部刷新";
-  }
-  else if (display.epd2.hasPartialUpdate)
-  {
-    updatemode = "缓慢局部刷新";
-  }
-  else
-  {
-    updatemode = "不支持局部刷新";
-  }
-  Serial.printf("\n屏幕刷新模式: %s\n", updatemode);
-}
-
 extern void display_setup(void)
 {
   u8g2Fonts.setFontMode(1);          // 使用u8g2透明模式（这是默认设置）
@@ -25,8 +7,6 @@ extern void display_setup(void)
   ESP.wdtFeed();//喂狗
 
   updateMode();//获取屏幕刷新模式
-
-  //display_Bitmap_Setup(); //开机壁纸
 
   //测试
   //display_test_number();
@@ -64,33 +44,21 @@ static void GetWeekday(char *pszWeekday, uint8_t nWeekday)
   }
 }
 
-static void SetForegroundColorRED(void)
+static bool RefreshDate(void)
 {
-  u8g2Fonts.setForegroundColor(COLOR_RED);    // 设置前景色
-  u8g2Fonts.setBackgroundColor(COLOR_WHITE);  // 设置背景色
-}
-
-static void SetForegroundColorBLACK(void)
-{
-  u8g2Fonts.setForegroundColor(COLOR_BLACK);    // 设置前景色
-  u8g2Fonts.setBackgroundColor(COLOR_WHITE);  // 设置背景色
-}
-
-static void RefreshDateTime(void)
-{
-  DateTime stDateTime;
+  Date stDate;
   uint16_t dataWidth;
   char disp[100];
   
-  memset(&stDateTime, 0, sizeof(stDateTime));
-  if (GetDatetime(&stDateTime))
+  memset(&stDate, 0, sizeof(stDate));
+  if (GetDate(&stDate))
   {
     //年月日
     u8g2Fonts.setFont(u8g2_mfyuanhei_16_gb2312);//设置为大字体
-    sprintf(disp, "%d-%02d-%02d", stDateTime.year, stDateTime.month, stDateTime.day);
+    sprintf(disp, "%d-%02d-%02d", stDate.time.year, stDate.time.month, stDate.time.day);
     u8g2Fonts.drawUTF8(0, FONT_SIZE_CHINESE_LARGE, disp);
     //节日
-    sprintf(disp, "%s", stDateTime.holiday);
+    sprintf(disp, "%s", stDate.holiday);
     if(strlen(disp))
     {
       SetForegroundColorRED(); //设置为红色
@@ -99,7 +67,7 @@ static void RefreshDateTime(void)
       dataWidth = u8g2Fonts.getUTF8Width(disp);
       u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 2 + 4, disp);
 
-      sprintf(disp, "(%s)", stDateTime.holidayRemark);
+      sprintf(disp, "(%s)", stDate.holidayRemark);
       if(strlen(disp))
       {
         u8g2Fonts.setFont(chinese_city_gb2312);//设置为正常字体
@@ -112,7 +80,7 @@ static void RefreshDateTime(void)
     else
     {
       u8g2Fonts.setFont(u8g2_mfyuanhei_16_gb2312);//设置为大字体
-      sprintf(disp, "%s", stDateTime.holidayRemark);
+      sprintf(disp, "%s", stDate.holidayRemark);
       if(strlen(disp))
       {
         SetForegroundColorRED(); //设置为红色
@@ -127,31 +95,35 @@ static void RefreshDateTime(void)
     //设置为正常字体
     u8g2Fonts.setFont(chinese_city_gb2312);
     //星期
-    GetWeekday(disp, stDateTime.week);
+    GetWeekday(disp, stDate.time.week);
     u8g2Fonts.drawUTF8(0, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING, disp);
     //干支 生肖
-    sprintf(disp, "农历%s%s年", stDateTime.ganzhi, stDateTime.shengxiao);
+    sprintf(disp, "农历%s%s年", stDate.ganzhi, stDate.shengxiao);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING, disp);
     //农历年月日
-    sprintf(disp, "%s", stDateTime.convert);
+    sprintf(disp, "%s", stDate.convert);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING * 2, disp);
 
     //大数字日期
-    if (!stDateTime.isWorkday) //节假日修改为红色数字
+    if (!stDate.isWorkday) //节假日修改为红色数字
     {
       SetForegroundColorRED(); //设置为红色
     }
     u8g2Fonts.setFont(u8g2_mfxinran_92_number);
-    sprintf(disp, "%d", stDateTime.day);
+    sprintf(disp, "%d", stDate.time.day);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + FONT_SIZE_NUMBER, disp);
-    if (!stDateTime.isWorkday) //恢复为黑白色
+    if (!stDate.isWorkday) //恢复为黑白色
     {
       SetForegroundColorBLACK(); //设置为黑色
     }
+
+    return true;
   }
+
+  return false;
 }
 
 static void display_icon_weather(uint16_t x, uint16_t y, char *weatherCode) //天气图标显示
@@ -197,7 +169,7 @@ static void display_icon_weather(uint16_t x, uint16_t y, char *weatherCode) //�
   else display.drawInvertedBitmap(x, y, Bitmap_wz, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
 }
 
-static void RefreshWeather(void)
+static bool RefreshWeather(void)
 {
   Weather stWeather;
   uint16_t dataWidth;
@@ -218,32 +190,32 @@ static void RefreshWeather(void)
     u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE, disp);
 
     //天气图标
-    if(!isNight)
+    if(!gisNight)
     {
-      display_icon_weather(x, y, stWeather.date0_code_day);
+      display_icon_weather(x, y, stWeather.date_code_day);
     }
     else
     {
-      display_icon_weather(x, y, stWeather.date0_code_night);
+      display_icon_weather(x, y, stWeather.date_code_night);
     }
 
     //设置正常字体
     u8g2Fonts.setFont(chinese_city_gb2312);
     //天气
-    if(String(stWeather.date0_text_day) == String(stWeather.date0_text_night))
+    if(String(stWeather.date_text_day) == String(stWeather.date_text_night))
     {
-      sprintf(disp, "%s", stWeather.date0_text_day);
+      sprintf(disp, "%s", stWeather.date_text_day);
     }
     else
     {
-      sprintf(disp, "%s转%s", stWeather.date0_text_day, stWeather.date0_text_night);
+      sprintf(disp, "%s转%s", stWeather.date_text_day, stWeather.date_text_night);
     }
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING;
     u8g2Fonts.drawUTF8(x, temp_y, disp);
 
     //最低温度
-    sprintf(disp, "%s", stWeather.date0_low);
+    sprintf(disp, "%s", stWeather.date_low);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING*2;
     u8g2Fonts.drawUTF8(x, temp_y, disp);
@@ -252,17 +224,21 @@ static void RefreshWeather(void)
     circle_x = temp_x + 3; //计算圈圈的位置
     display.drawCircle(circle_x, temp_y - FONT_SIZE_CHINESE_SPACING + 5, 2, 0);
     //最高温度
-    sprintf(disp, " ~ %s", stWeather.date0_high);
+    sprintf(disp, " ~ %s", stWeather.date_high);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8(temp_x, temp_y, disp);
     temp_x = temp_x + dataWidth;
     //画圆圈
     circle_x = temp_x + 3; //计算圈圈的位置
     display.drawCircle(circle_x, temp_y - FONT_SIZE_CHINESE_SPACING + 5, 2, 0);
+  
+    return true;
   }
+
+  return false;
 }
 
-static void RefreshLifeIndex(void)
+static bool RefreshLifeIndex(void)
 {
   LifeIndex stLifeIndex;
   char disp[120];
@@ -278,10 +254,14 @@ static void RefreshLifeIndex(void)
     //刷紫外线指数
     sprintf(disp, "紫外线%s", stLifeIndex.uvi);
     u8g2Fonts.drawUTF8(x, y, disp);
+
+    return true;
   }
+
+  return false;
 }
 
-static void RefreshHitokoto(void)
+static bool RefreshHitokoto(void)
 {
   Hitokoto stHitokoto;
   uint16_t dataWidth;
@@ -306,9 +286,14 @@ static void RefreshHitokoto(void)
   else
   {
     u8g2Fonts.setFont(chinese_city_gb2312);
-    dataWidth = u8g2Fonts.getUTF8Width(DefaultHitokoto.c_str());
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), DefaultHitokoto.c_str());
+    dataWidth = u8g2Fonts.getUTF8Width(DefaultHitokoto);
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), DefaultHitokoto);
+
+    dataWidth = u8g2Fonts.getUTF8Width(DefaultHitokotoFrom);
+    u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth - FONT_SIZE_CHINESE * 2, SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), DefaultHitokotoFrom);
   }
+
+  return true;
 }
 
 extern void display_MainPage(void)
@@ -317,113 +302,10 @@ extern void display_MainPage(void)
   display.firstPage();
   do
   {
-    RefreshDateTime();//刷新日期时间
+    RefreshDate();//刷新日期
     RefreshWeather();//刷新天气
     RefreshLifeIndex();//刷新天气指数
     RefreshHitokoto();//刷新一言
   }
   while (display.nextPage());
-}
-
-static void display_test_str(void)
-{
-  int16_t dataWidth;
-  String str = "2021年08月06日 星期五";
-  const char* character = str.c_str(); 
-  uint8_t size = 24;
-
-  display.firstPage();
-  do
-  {
-    u8g2Fonts.setFont(u8g2_mfyuanhei_16_gb2312);
-
-    dataWidth = u8g2Fonts.getUTF8Width(character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size, character);
-    Serial.printf("\ndataWidth: %d\n", dataWidth/8);
-
-    dataWidth = u8g2Fonts.getUTF8Width(character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size * 2, character);
-    Serial.printf("\ndataWidth: %d\n", dataWidth/8);
-
-    dataWidth = u8g2Fonts.getUTF8Width(character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size * 3, character);
-    Serial.printf("\ndataWidth: %d\n", dataWidth/8);
-  }
-  while (display.nextPage());
-}
-
-static void display_test_number(void)
-{
-  int16_t dataWidth;
-  display.firstPage();
-  do
-  {
-    uint8_t size = 101;
-    u8g2Fonts.setFont(u8g2_mfxinran_92_number);
-    dataWidth = u8g2Fonts.getUTF8Width("123");
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size, "123");
-    Serial.printf("\ndataWidth: %d\n", dataWidth/3);
-
-    dataWidth = u8g2Fonts.getUTF8Width("456");
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size*2, "456");
-    Serial.printf("\ndataWidth: %d\n", dataWidth/3);
-
-    dataWidth = u8g2Fonts.getUTF8Width("789");
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size*3, "789");
-    Serial.printf("\ndataWidth: %d\n", dataWidth/3);
-  }
-  while (display.nextPage());
-}
-
-static void display_test_weather() //图标测试
-{
-  display.fillScreen(COLOR_WHITE);  // 填充屏幕
-  display.display(1);         // 显示缓冲内容到屏幕，用于全屏缓冲
-
-  //网格
-  display.drawLine(0, 1, 400, 1, COLOR_RED);
-  display.drawLine(0, 45, 400, 45, COLOR_RED);
-  display.drawLine(1, 0, 1, 300, COLOR_RED);
-  display.drawLine(45, 0, 45, 300, COLOR_RED);
-
-  display.drawInvertedBitmap(0, 0, Bitmap_qt, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(50, 0, Bitmap_dy, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(100, 0, Bitmap_yt, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(150, 0, Bitmap_zheny, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(200, 0, Bitmap_lzybbb, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(250, 0, Bitmap_xy, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(300, 0, Bitmap_zhongy, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(350, 0, Bitmap_dayu, 45, 45, COLOR_BLACK);
-
-  display.drawInvertedBitmap(0, 50, Bitmap_by, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(50, 50, Bitmap_dby, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(100, 50, Bitmap_tdby, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(150, 50, Bitmap_dongy, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(200, 50, Bitmap_yjx, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(250, 50, Bitmap_zhenx, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(300, 50, Bitmap_xx, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(350, 50, Bitmap_zhongx, 45, 45, COLOR_BLACK);
-
-  display.drawInvertedBitmap(0, 100, Bitmap_dx, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(50, 100, Bitmap_bx, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(100, 100, Bitmap_fc, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(150, 100, Bitmap_ys, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(200, 100, Bitmap_scb, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(250, 100, Bitmap_w, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(300, 100, Bitmap_m, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(350, 100, Bitmap_f, 45, 45, COLOR_BLACK);
-
-  display.drawInvertedBitmap(0, 150, Bitmap_jf, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(50, 150, Bitmap_rdfb, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(100, 150, Bitmap_ljf, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(150, 150, Bitmap_wz, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(200, 150, Bitmap_qt_ws, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(250, 150, Bitmap_yt_ws, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(300, 150, Bitmap_dy_ws, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(350, 150, Bitmap_zy_ws, 45, 45, COLOR_BLACK);
-
-  display.drawInvertedBitmap(0, 200, Bitmap_zx_ws, 45, 45, COLOR_BLACK);
-  display.drawInvertedBitmap(50, 200, Bitmap_weizhi, 13, 13, COLOR_BLACK);
-
-  display.display(1);
 }

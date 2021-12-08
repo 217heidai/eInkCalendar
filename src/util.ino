@@ -1,10 +1,43 @@
+//获取屏幕刷新模式
+extern void updateMode(void)
+{
+  const char* updatemode;
+  if (display.epd2.hasFastPartialUpdate)
+  {
+    updatemode = "快速局部刷新";
+  }
+  else if (display.epd2.hasPartialUpdate)
+  {
+    updatemode = "缓慢局部刷新";
+  }
+  else
+  {
+    updatemode = "不支持局部刷新";
+  }
+  Serial.printf("\n屏幕刷新模式: %s\n", updatemode);
+}
+
+//显示为红色字体
+extern void SetForegroundColorRED(void)
+{
+  u8g2Fonts.setForegroundColor(COLOR_RED);    // 设置前景色
+  u8g2Fonts.setBackgroundColor(COLOR_WHITE);  // 设置背景色
+}
+
+//显示为黑色字体
+extern void SetForegroundColorBLACK(void)
+{
+  u8g2Fonts.setForegroundColor(COLOR_BLACK);    // 设置前景色
+  u8g2Fonts.setBackgroundColor(COLOR_WHITE);  // 设置背景色
+}
+
+
 //系统休眠
-void esp_sleep(uint32_t minutes)
+extern void esp_sleep(uint32_t minutes)
 {
   Serial.printf("esp deep sleep: %d minutes\n", minutes);
   display.hibernate(); //屏幕进入深度睡眠
   if (minutes > 70) minutes = 70;
-  //else if (get_bat_vcc_nwe() < BatLow) minutes = 0;
   ESP.deepSleep(minutes * 60 * 1000000, WAKE_NO_RFCAL);  //WAKE_RF_DEFAULT  WAKE_RFCAL  WAKE_NO_RFCAL  WAKE_RF_DISABLED
 }
 

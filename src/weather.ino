@@ -27,59 +27,31 @@ static bool ParseWeather(String content, Weather *pstWeather)
     strcpy(pstWeather->last_update, json["results"][0]["last_update"]);
 
   if (json["results"][0]["daily"][0]["date"].isNull() == 0)        //日期
-    strcpy(pstWeather->date0, json["results"][0]["daily"][0]["date"]);
-  if (json["results"][0]["daily"][1]["date"].isNull() == 0)
-    strcpy(pstWeather->date1, json["results"][0]["daily"][1]["date"]);
-  if (json["results"][0]["daily"][2]["date"].isNull() == 0)
-    strcpy(pstWeather->date2, json["results"][0]["daily"][2]["date"]);
+    strcpy(pstWeather->date, json["results"][0]["daily"][0]["date"]);
 
   if (json["results"][0]["daily"][0]["text_day"].isNull() == 0)    //白天天气现象
-    strcpy(pstWeather->date0_text_day, json["results"][0]["daily"][0]["text_day"]);
-  if (json["results"][0]["daily"][1]["text_day"].isNull() == 0)
-    strcpy(pstWeather->date1_text_day, json["results"][0]["daily"][1]["text_day"]);
-  if (json["results"][0]["daily"][2]["text_day"].isNull() == 0)
-    strcpy(pstWeather->date2_text_day, json["results"][0]["daily"][2]["text_day"]);
+    strcpy(pstWeather->date_text_day, json["results"][0]["daily"][0]["text_day"]);
 
   if (json["results"][0]["daily"][0]["code_day"].isNull() == 0)    //白天天气代码
-    strcpy(pstWeather->date0_code_day, json["results"][0]["daily"][0]["code_day"]);
-  if (json["results"][0]["daily"][1]["code_day"].isNull() == 0)
-    strcpy(pstWeather->date1_code_day, json["results"][0]["daily"][1]["code_day"]);
-  if (json["results"][0]["daily"][2]["code_day"].isNull() == 0)
-    strcpy(pstWeather->date2_code_day, json["results"][0]["daily"][2]["code_day"]);   
+    strcpy(pstWeather->date_code_day, json["results"][0]["daily"][0]["code_day"]);
 
   if (json["results"][0]["daily"][0]["text_night"].isNull() == 0)    //晚间天气现象
-    strcpy(pstWeather->date0_text_night, json["results"][0]["daily"][0]["text_night"]);
-  if (json["results"][0]["daily"][1]["text_night"].isNull() == 0)
-    strcpy(pstWeather->date1_text_night, json["results"][0]["daily"][1]["text_night"]);
-  if (json["results"][0]["daily"][2]["text_night"].isNull() == 0)
-    strcpy(pstWeather->date2_text_night, json["results"][0]["daily"][2]["text_night"]);
+    strcpy(pstWeather->date_text_night, json["results"][0]["daily"][0]["text_night"]);
 
   if (json["results"][0]["daily"][0]["code_night"].isNull() == 0)    //晚间天气代码
-    strcpy(pstWeather->date0_code_night, json["results"][0]["daily"][0]["code_night"]);
-  if (json["results"][0]["daily"][1]["code_night"].isNull() == 0)
-    strcpy(pstWeather->date1_code_night, json["results"][0]["daily"][1]["code_night"]);
-  if (json["results"][0]["daily"][2]["code_night"].isNull() == 0)
-    strcpy(pstWeather->date2_code_night, json["results"][0]["daily"][2]["code_night"]);
+    strcpy(pstWeather->date_code_night, json["results"][0]["daily"][0]["code_night"]);
 
   if (json["results"][0]["daily"][0]["high"].isNull() == 0)
-    strcpy(pstWeather->date0_high, json["results"][0]["daily"][0]["high"]);  //最高温度
-  if (json["results"][0]["daily"][1]["high"].isNull() == 0)
-    strcpy(pstWeather->date1_high, json["results"][0]["daily"][1]["high"]);
-  if (json["results"][0]["daily"][2]["high"].isNull() == 0)
-    strcpy(pstWeather->date2_high, json["results"][0]["daily"][2]["high"]);
+    strcpy(pstWeather->date_high, json["results"][0]["daily"][0]["high"]);  //最高温度
 
   if (json["results"][0]["daily"][0]["low"].isNull() == 0)             //最低温度
-    strcpy(pstWeather->date0_low, json["results"][0]["daily"][0]["low"]);
-  if (json["results"][0]["daily"][1]["low"].isNull() == 0)
-    strcpy(pstWeather->date1_low, json["results"][0]["daily"][1]["low"]);
-  if (json["results"][0]["daily"][2]["low"].isNull() == 0)
-    strcpy(pstWeather->date2_low, json["results"][0]["daily"][2]["low"]);
+    strcpy(pstWeather->date_low, json["results"][0]["daily"][0]["low"]);
 
   if (json["results"][0]["daily"][0]["humidity"].isNull() == 0)                //湿度
-    strcpy(pstWeather->date0_humidity, json["results"][0]["daily"][0]["humidity"]);
+    strcpy(pstWeather->date_humidity, json["results"][0]["daily"][0]["humidity"]);
 
   if (json["results"][0]["daily"][0]["wind_scale"].isNull() == 0)        //风力等级
-    strcpy(pstWeather->date0_wind_scale, json["results"][0]["daily"][0]["wind_scale"]);
+    strcpy(pstWeather->date_wind_scale, json["results"][0]["daily"][0]["wind_scale"]);
   return true;
 }
 

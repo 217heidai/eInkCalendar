@@ -33,9 +33,9 @@ U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
 #include "u8g2_mfxinran_92_number.c"    //80*100
 #include "u8g2_mfyuanhei_16_gb2312.c"   //21x21
 //声明外部变量
-extern const uint8_t chinese_city_gb2312[239032] PROGMEM U8G2_FONT_SECTION("chinese_city_gb2312");
-extern const uint8_t u8g2_mfxinran_92_number[1240] PROGMEM U8G2_FONT_SECTION("u8g2_mfxinran_92_number");
-extern const uint8_t u8g2_mfyuanhei_16_gb2312[334933] PROGMEM U8G2_FONT_SECTION("u8g2_mfyuanhei_16_gb2312");
+//extern const uint8_t chinese_city_gb2312[239032] PROGMEM U8G2_FONT_SECTION("chinese_city_gb2312");
+//extern const uint8_t u8g2_mfxinran_92_number[1240] PROGMEM U8G2_FONT_SECTION("u8g2_mfxinran_92_number");
+//extern const uint8_t u8g2_mfyuanhei_16_gb2312[334933] PROGMEM U8G2_FONT_SECTION("u8g2_mfyuanhei_16_gb2312");
 //字体大小
 #define FONT_SIZE_NUMBER  100 //80*100
 #define FONT_SIZE_CHINESE 13  //根据选择的字体大小设置
@@ -54,38 +54,52 @@ const char *ssid     = "{ssid}";
 const char *password = "{password}";
 
 //日期
-const String url_Workday = "https://api.xlongwei.com/service/datetime/isworkday.json"; //是否工作日
-const String url_Holiday = "https://api.xlongwei.com/service/datetime/holiday.json"; //节假日信息
-const String url_Convert = "https://api.xlongwei.com/service/datetime/convert.json"; //农历信息
+static const char *url_Workday = "https://api.xlongwei.com/service/datetime/isworkday.json"; //是否工作日
+static const char *url_Holiday = "https://api.xlongwei.com/service/datetime/holiday.json"; //节假日信息
+static const char *url_Convert = "https://api.xlongwei.com/service/datetime/convert.json"; //农历信息
 
 // 心知天气
-const String url_Weather = "https://api.seniverse.com/v3/weather/daily.json?key={个人KEY}&location=上海&language=zh-Hans&unit=c&start=0&days=3";
-const String url_LifeIndex = "https://api.seniverse.com/v3/life/suggestion.json?key={个人KEY}&location=上海&language=zh-Hans";
+static const char *url_Weather = "https://api.seniverse.com/v3/weather/daily.json?key={个人KEY}&location=上海&language=zh-Hans&unit=c&start=0&days=1";
+static const char *url_LifeIndex = "https://api.seniverse.com/v3/life/suggestion.json?key={个人KEY}&location=上海&language=zh-Hans";
 
 // 一言
-const String url_Hitokoto = "https://v1.hitokoto.cn/?encode=json&charset=utf-8&max_length=25";
+static const char *url_Hitokoto = "https://v1.hitokoto.cn/?encode=json&charset=utf-8&max_length=25";
 
 // 天气刷新间隔
-#define REFRESH_FREQUENCY 60  //每60分钟刷新一次
+#define REFRESH_FREQUENCY  8 //8小时
+// 休眠时间
+#define SLEEP_TIME 60  //60分钟
 
 // 是否为夜间
-bool isNight = false;
+bool gisNight = false;
 
+//RTC变量地址
+#define RTCdz_EpochTime_LastUpdate       0    //上次刷新时间
+#define RTCdz_EpochTime_Now              1    //当前系统时间，非精准时间，通过推算获取
 
 //日期信息结构
-typedef struct _DateTime
+typedef struct _Time
 {
   uint16_t year;
   uint8_t month;
   uint8_t day;
   uint8_t week; // 0 is Sunday
+  uint8_t hour;
+  uint8_t minute;
+  uint8_t second;
+}Time;
+
+//日期信息结构
+typedef struct _Date
+{
+  Time time; //时间
   char holiday[20]; //节日
   char holidayRemark[40]; //节日备注
   char convert[40]; //农历
   char shengxiao[8]; //生肖
   char ganzhi[16]; //干支
   bool isWorkday; //是否工作日
-}DateTime;
+}Date;
 
 //天气
 typedef struct _Weather
@@ -94,31 +108,15 @@ typedef struct _Weather
   char city[16];              //城市名称
   char last_update[25];       //最后更新时间
 
-  char date0[14];             //今天日期
-  char date0_text_day[20];    //白天天气现象名称
-  char date0_code_day[4];     //白天天气现象代码
-  char date0_text_night[16];  //晚上天气现象名称
-  char date0_code_night[4];   //晚上天气现象代码
-  char date0_high[5];         //最高温度
-  char date0_low[5];          //最低温度
-  char date0_humidity[5];     //相对湿度
-  char date0_wind_scale[5];   //风力等级
-
-  char date1[14];             //明天日期
-  char date1_text_day[20];    //白天天气现象名称
-  char date1_code_day[4];     //白天天气现象代码
-  char date1_text_night[16];  //晚上天气现象名称
-  char date1_code_night[4];   //晚上天气现象代码
-  char date1_high[5];         //最高温度
-  char date1_low[5];          //最低温度
-
-  char date2[14];             //后天日期
-  char date2_text_day[20];    //白天天气现象名称
-  char date2_code_day[4];     //白天天气现象代码
-  char date2_text_night[16];  //晚上天气现象名称
-  char date2_code_night[4];   //晚上天气现象代码
-  char date2_high[5];         //最高温度
-  char date2_low[5];          //最低温度
+  char date[14];             //今天日期
+  char date_text_day[20];    //白天天气现象名称
+  char date_code_day[4];     //白天天气现象代码
+  char date_text_night[16];  //晚上天气现象名称
+  char date_code_night[4];   //晚上天气现象代码
+  char date_high[5];         //最高温度
+  char date_low[5];          //最低温度
+  char date_humidity[5];     //相对湿度
+  char date_wind_scale[5];   //风力等级
 }Weather;
 
 //生活指数
@@ -134,7 +132,11 @@ typedef struct _Hitokoto
   char hitokoto[100]; //一言
   char from[64]; //出自
 }Hitokoto;
-const String DefaultHitokoto = "当你怀疑人生的时候，其实这就是你的人生。"; //默认信息
+
+static const char DefaultHitokoto[] = "Talk is cheap. Show me the code."; //默认信息
+static const char DefaultHitokotoFrom[] = "Linus Torvalds";
+
+
 
 void setup()
 {
@@ -150,6 +152,9 @@ void setup()
   display_setup(); //开机信息显示
 
   Serial.printf("剩余堆空间：%d\n", ESP.getFreeHeap());//查看堆空间
+  Serial.printf("sizeof(int)：%d, sizeof(long): %d\n", sizeof(int), sizeof(long));//
+
+  if(!isNeedRefresh()) goto ESP_SLEEP;//检查是否需要刷新
 
   //led_controller(1); //点亮led
 
@@ -160,7 +165,7 @@ void setup()
 ESP_SLEEP:
   //led_controller(0); //熄灭led
   Serial.printf("剩余堆空间：%d\n", ESP.getFreeHeap());//查看堆空间
-  esp_sleep(REFRESH_FREQUENCY); //休眠REFRESH_FREQUENCY后重启
+  esp_sleep(SLEEP_TIME); //休眠SLEEP_TIME后重启
 }
 
 void loop()

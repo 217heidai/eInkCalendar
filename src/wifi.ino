@@ -18,7 +18,7 @@ extern bool connectToWifi(void)
   {
     disp = "Connecting to WiFi[" + String(ssid) + "] failed";
     Serial.println(disp.c_str());
-    //esp_sleep(REFRESH_FREQUENCY);
+    //esp_sleep(SLEEP_TIME);
     return false;
   }
   disp = "Connected to WiFi[" + String(ssid) + "], IP: " + WiFi.localIP().toString();
@@ -28,7 +28,7 @@ extern bool connectToWifi(void)
 }
 
 //https请求
-extern String callHttps(String url)
+extern String callHttps(const char *url)
 {
   String payload = "";
   std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
@@ -40,8 +40,8 @@ extern String callHttps(String url)
 
   HTTPClient https;
 
-  Serial.printf("[HTTPS] begin... url: %s\n", url.c_str());
-  if (https.begin(*client, url)) {  // HTTPS
+  Serial.printf("[HTTPS] begin... url: %s\n", url);
+  if (https.begin(*client, String(url))) {  // HTTPS
     // start connection and send HTTP header
     int httpCode = https.GET();
     Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
