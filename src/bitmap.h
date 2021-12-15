@@ -39,7 +39,7 @@ extern const unsigned char Bitmap_weizhi[];
 extern const unsigned char Bitmap_zhuangtai[];
 extern const unsigned char Bitmap_gengxing[];
 extern const unsigned char Bitmap_riqi[];
-extern const unsigned char Bitmap_batlow[];
+extern const unsigned char Bitmap_BAT_LOW[];
 extern const unsigned char Bitmap_humidity[];
 extern const unsigned char Bitmap_fx[];
 extern const unsigned char Bitmap_rdfb[];

@@ -39,6 +39,7 @@ extern String callHttps(const char *url)
   client->setBufferSizes(512, 512);
 
   HTTPClient https;
+  https.setReuse(false); //是否keep-alive
 
   Serial.printf("[HTTPS] begin... url: %s\n", url);
   if (https.begin(*client, String(url))) {  // HTTPS

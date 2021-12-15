@@ -13,7 +13,13 @@
 #include "bitmap.h"
 
 //按键定义
-#define KEY_UP    5
+#define KEY_UP            5  //上方按键
+#define KEY_DOWN         EN  //下方按键
+//电量读取PIN
+#define BAT_PIN_SWITCH   12  //电池电压读取开关
+#define BAT_PIN_VCC      A0  //读取电池电压引脚
+#define BAT_FULL        4.2  //满电压
+#define BAT_LOW         3.2  //低电压
 
 //U8g2显示
 U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;

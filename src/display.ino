@@ -12,6 +12,8 @@ extern void display_setup(void)
   //display_test_number();
   //display_test_weather();
   //display_test_str();
+  //display_test_battery();
+  //esp_sleep(SLEEP_TIME);
 }
 
 static void GetWeekday(char *pszWeekday, uint8_t nWeekday)
@@ -296,6 +298,39 @@ static bool RefreshHitokoto(void)
   return true;
 }
 
+static void RefreshBattery(void)
+{
+  //电量百分比
+  uint8_t percentage = bat_get_percentage();
+  
+  //电量图标
+  int16_t x_start = 3;
+  int16_t y_start = SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING;
+  int16_t head_width  = 3;
+  int16_t head_height = 6;
+  int16_t body_width  = 24;
+  int16_t body_height = 14;
+  int16_t full_width  = (body_width - 2 - 2) * percentage / 100; //填充宽度
+  int16_t full_height = body_height - 2 - 2; //填充高度，留1像素间隙
+  uint16_t color = COLOR_BLACK; //颜色
+  if(percentage <= 10) color = COLOR_RED; //低于10%使用红色
+  //head
+  int16_t x_head = x_start;
+  int16_t y_head = y_start + (FONT_SIZE_CHINESE_SPACING - body_height)/2 + (body_height - head_height)/2;
+  display.fillRect(x_head, y_head, head_width, head_height, color);
+  //body
+  int16_t x_body = x_head + head_width;
+  int16_t y_body = y_start + (FONT_SIZE_CHINESE_SPACING - body_height)/2;
+  display.drawRect(x_body, y_body, body_width, body_height, color);
+  //full
+  if(percentage >= 5)
+  {
+    int16_t x_full = x_body + 2 + (body_width - 2 - 2) - full_width;
+    int16_t y_full = y_start + (FONT_SIZE_CHINESE_SPACING - full_height)/2;
+    display.fillRect(x_full, y_full, full_width, full_height, color);
+  }
+}
+
 extern void display_MainPage(void)
 {
   display.setPartialWindow(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH); //设置全局刷新
@@ -306,6 +341,7 @@ extern void display_MainPage(void)
     RefreshWeather();//刷新天气
     RefreshLifeIndex();//刷新天气指数
     RefreshHitokoto();//刷新一言
+    RefreshBattery();//刷新电量
   }
   while (display.nextPage());
 }

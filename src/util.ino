@@ -31,7 +31,6 @@ extern void SetForegroundColorBLACK(void)
   u8g2Fonts.setBackgroundColor(COLOR_WHITE);  // 设置背景色
 }
 
-
 //系统休眠
 extern void esp_sleep(uint32_t minutes)
 {
@@ -56,4 +55,39 @@ extern void led_controller(bool controller)
 
     pinMode(LED_BUILTIN, INPUT);
   }
+}
+
+//获取电压
+static float bat_get_vcc(void) //即时的电压
+{
+  pinMode(BAT_PIN_SWITCH, OUTPUT);
+  digitalWrite(BAT_PIN_SWITCH, 1);
+  delay(1);
+  float vcc_cache = 0.0;
+  for (uint8_t i = 0; i < 20; i++)
+  {
+    //delay(1);
+    vcc_cache += analogRead(BAT_PIN_VCC) * 0.0009765625 * 5.537;
+  }
+  digitalWrite(BAT_PIN_SWITCH, 0); //关闭电池测量
+  pinMode(BAT_PIN_SWITCH, INPUT);  //改为输入状态避免漏电
+  return (vcc_cache / 20);
+}
+
+//获取电量百分比
+extern float bat_get_percentage(void)
+{
+  float vcc = 0.0;
+  float percentage = 0.0;
+  
+  vcc = bat_get_vcc();
+  
+  //低电量
+  if(vcc > BAT_LOW)
+  {
+    percentage = ((vcc - BAT_LOW) / (BAT_FULL - BAT_LOW)) * 100 + 0.5; //计算百分比
+    if (percentage > 100) percentage = 100.0;
+  }
+
+  return percentage;
 }
