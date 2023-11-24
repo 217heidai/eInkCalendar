@@ -1,28 +1,35 @@
 extern void display_test_str(void) //中文字体测试
 {
   int16_t dataWidth;
-  String str = "2021年08月06日 星期五";
+  String str = "2023年07月04日 星期二 上海";
   const char* character = str.c_str(); 
-  uint8_t size = 24;
 
+  display.setPartialWindow(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH/2); //设置刷新区域
   display.firstPage();
   do
   {
-    u8g2Fonts.setFont(u8g2_mfyuanhei_16_gb2312);
-
+    u8g2Fonts.setFont(chinese_city_gb2312);
     dataWidth = u8g2Fonts.getUTF8Width(character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size, character);
-    Serial.printf("\ndataWidth: %d\n", dataWidth/8);
-
-    dataWidth = u8g2Fonts.getUTF8Width(character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size * 2, character);
-    Serial.printf("\ndataWidth: %d\n", dataWidth/8);
-
-    dataWidth = u8g2Fonts.getUTF8Width(character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size * 3, character);
-    Serial.printf("\ndataWidth: %d\n", dataWidth/8);
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING, character);
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING * 2, character);
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING * 3, character);
   }
   while (display.nextPage());
+
+  display.setPartialWindow(0, SCREEN_HEIGTH/2, SCREEN_WIDTH, SCREEN_HEIGTH/2); //设置刷新区域
+  display.firstPage();
+  do
+  {
+    u8g2Fonts.setFont(u8g2_mfxinran_16_number);
+    dataWidth = u8g2Fonts.getUTF8Width(character);
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING, character);
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING * 2, character);
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING * 3, character);
+  }
+  while (display.nextPage());
+
+
+  delay(5000);
 }
 
 extern void display_test_number(void) //大数字测试
@@ -31,7 +38,7 @@ extern void display_test_number(void) //大数字测试
   display.firstPage();
   do
   {
-    uint8_t size = 101;
+    uint8_t size = FONT_SIZE_NUMBER;
     u8g2Fonts.setFont(u8g2_mfxinran_92_number);
     dataWidth = u8g2Fonts.getUTF8Width("123");
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size, "123");
@@ -46,6 +53,7 @@ extern void display_test_number(void) //大数字测试
     Serial.printf("\ndataWidth: %d\n", dataWidth/3);
   }
   while (display.nextPage());
+  delay(5000);
 }
 
 extern void display_test_weather() //图标测试
@@ -99,6 +107,7 @@ extern void display_test_weather() //图标测试
   display.drawInvertedBitmap(50, 200, Bitmap_weizhi, 13, 13, COLOR_BLACK);
 
   display.display(1);
+  delay(5000);
 }
 
 static void test_battery(uint8_t percentage, int16_t x_start)

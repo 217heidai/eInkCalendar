@@ -1,5 +1,10 @@
+#define START_YEAR    (1970)
+#define SECOND_DAY    (86400L)   //60*60*24
+#define SECOND_HOUR   (3600)    //60*60
+#define SECOND_MIN    (60)      //60
+
 //获取NTP时间
-static bool GetNTPTime(unsigned long *pEpochTime)
+extern bool GetNTPTime(unsigned long *pEpochTime)
 {
   uint8_t update_count = 0;
   uint8_t hour;
@@ -29,65 +34,84 @@ static bool GetNTPTime(unsigned long *pEpochTime)
   {
     gisNight = false;
   }
+  else
+  {
+    gisNight = true;
+  }
   timeClient.end();
   return true;
 }
 
 //使用Json解析日期
-static bool ParseDate(String workday, String holiday, String convert, Date *pstDate)
+static bool ParseDate(String content, Date *pstDate)
 {
   DynamicJsonDocument json(1536); //分配内存,动态
   DeserializationError error;
 
-  while(true)
-  {
-    error = deserializeJson(json, workday); //解析json
-    if (error) break;
-    pstDate->isWorkday = true;
-    if(!json["isworkday"].isNull())
-    {
-      if (!json["isworkday"])
-      {
-        pstDate->isWorkday = false;
-      }
-    }
-
-    error = deserializeJson(json, holiday); //解析json
-    if (error) break;
-    if(!json["holiday"].isNull())
-    {
-      strcpy(pstDate->holiday, json["holiday"]);
-    }
-    if(!json["remark"].isNull())
-    {
-      strcpy(pstDate->holidayRemark, json["remark"]);
-    }
-    
-    error = deserializeJson(json, convert); //解析json
-    if (error) break;
-    if(!json["chinese"].isNull())
-    {
-      strcpy(pstDate->convert, json["chinese"]);
-    }
-    if(!json["shengxiao"].isNull())
-    {
-      strcpy(pstDate->shengxiao, json["shengxiao"]);
-    }
-    if(!json["ganzhi"].isNull())
-    {
-      strcpy(pstDate->ganzhi, json["ganzhi"]);
-    }
-
-    break;
-  }
-
+  pstDate->isWorkday = true; //默认为工作日
+  //content.replace("\\", "");
+  //content = content.substring(1, content.length()-1);
+  //Serial.println(content);
+  error = deserializeJson(json, content); //解析json
   if (error)
   {
     Serial.print("日期信息json配置失败:");
-    Serial.println(error.c_str());
+    Serial.println(error.f_str());
     return false;
   }
-  
+  serializeJsonPretty(json, Serial);
+  Serial.println("");
+
+  if(!json["workday"].isNull()) //是否工作日
+  {
+    if (json["workday"]==0)
+    {
+      pstDate->isWorkday = false;
+    }
+  }
+  else
+  {
+    json.clear();
+    Serial.println("日期信息json配置失败");
+    return false;
+  }
+  if(!json["holiday"].isNull()) //节日信息
+  {
+    strcpy(pstDate->holiday, json["holiday"]);
+  }
+  if(!json["lunar_month"].isNull()) //农历月
+  {
+    strcpy(pstDate->convert, json["lunar_month"]);
+  }
+  if(!json["lunar_day"].isNull()) //农历日
+  {
+    strcpy(pstDate->convert+strlen(pstDate->convert), json["lunar_day"]);
+  }
+  if(!json["ganzhi_year"].isNull())//(干支)年柱
+  {
+    strcpy(pstDate->ganzhi, json["ganzhi_year"]);
+  }
+  if(!json["animal"].isNull())//生肖
+  {
+    strcpy(pstDate->shengxiao, json["animal"]);
+  }
+  if(!json["term"].isNull())//节气
+  {
+    strcpy(pstDate->term, json["term"]);
+  }
+  if(!json["yi"].isNull())//宜
+  {
+    strcpy(pstDate->yi, json["yi"]);
+  }
+  if(!json["ji"].isNull())//忌
+  {
+    strcpy(pstDate->ji, json["ji"]);
+  }
+  if(!json["lunar_festival"].isNull())//农历节日
+  {
+    strcpy(pstDate->lunar_festival, json["lunar_festival"]);
+  }
+  json.clear();
   return true;
 }
 
@@ -102,37 +126,47 @@ extern bool isNeedRefresh(void)
   RTC_EpochTime_Now += SLEEP_TIME * 60 + 10; //增加10s的误差时间
   GetTime(RTC_EpochTime_Now, &stTime);
   Serial.printf("RTC Time: %04d/%02d/%02d %02d:%02d:%02d\n", stTime.year, stTime.month, stTime.day, stTime.hour, stTime.minute, stTime.second);
+  if((stTime.year<2023)) //时间异常则强制更新
+  {
+    isRefresh = true;
+    goto END;
+  }
   ESP.rtcUserMemoryWrite(RTCdz_EpochTime_Now, (uint32_t *)&RTC_EpochTime_Now, sizeof(RTC_EpochTime_Now));//更新RTC时间
 
   //获取上次更新时间
   ESP.rtcUserMemoryRead(RTCdz_EpochTime_LastUpdate, (uint32_t *)&RTC_EpochTime_LastUpdate, sizeof(RTC_EpochTime_LastUpdate));
-  //Serial.printf("RTC_EpochTime_LastUpdate: %lu\n", RTC_EpochTime_LastUpdate);
   GetTime(RTC_EpochTime_LastUpdate, &stTime_LastUpdate);
   Serial.printf("last update Time: %04d/%02d/%02d %02d:%02d:%02d\n", stTime_LastUpdate.year, stTime_LastUpdate.month, stTime_LastUpdate.day, stTime_LastUpdate.hour, stTime_LastUpdate.minute, stTime_LastUpdate.second);
+  if((stTime_LastUpdate.year<2023)) //时间异常则强制更新
+  {
+    isRefresh = true;
+    goto END;
+  }
 
-  //RTC数据异常，需要刷新
-  if(RTC_EpochTime_Now <= RTC_EpochTime_LastUpdate)
+  //异常时间对比
+  if(RTC_EpochTime_Now < RTC_EpochTime_LastUpdate + SLEEP_TIME * 60) //RTC数据异常，需要刷新
   {
     isRefresh = true;
+    goto END;
   }
-  //日期变化，需要刷新
-  if((stTime.year != stTime_LastUpdate.year) || (stTime.month != stTime_LastUpdate.month) || (stTime.day != stTime_LastUpdate.day))
+
+  //正常时间下的刷新规则
+  //if((((stTime.hour - stTime_LastUpdate.hour)>= REFRESH_FREQUENCY) || (stTime.day != stTime_LastUpdate.day)) && ((stTime.hour > REFRESH_TIME_START) && (stTime.hour < REFRESH_TIME_END))) //距离上次刷新超过REFRESH_FREQUENCY小时，或者日期发生变化
+  if(((stTime.hour - stTime_LastUpdate.hour)>= REFRESH_FREQUENCY) || (stTime.day != stTime_LastUpdate.day)) //距离上次刷新超过REFRESH_FREQUENCY小时，或者日期发生变化
   {
     isRefresh = true;
+    goto END;
   }
-  //距离上次刷新超过8小时，需要刷新
-  if((stTime.hour - stTime_LastUpdate.hour)>= REFRESH_FREQUENCY) //距离上次刷新超过REFRESH_FREQUENCY小时
-  {
-    isRefresh = true;
-  }
-  
+
+END:
   return isRefresh;
 }
 
 extern bool GetDate(Date *pstDate)
 {
   unsigned long ulEpochTime;
-  String workday, holiday, convert;
+  String dateInfo;
+  bool Result;
 
   //获取NTP时间
   if(GetNTPTime(&ulEpochTime))
@@ -143,20 +177,12 @@ extern bool GetDate(Date *pstDate)
 
   //更新RTC时间
   ESP.rtcUserMemoryWrite(RTCdz_EpochTime_Now, (uint32_t *)&ulEpochTime, sizeof(ulEpochTime));
-  //更新刷新时间
-  ESP.rtcUserMemoryWrite(RTCdz_EpochTime_LastUpdate, (uint32_t *)&ulEpochTime, sizeof(ulEpochTime));
 
   //获取日期信息
-  workday = callHttps(url_Workday);
-  holiday = callHttps(url_Holiday);
-  convert = callHttps(url_Convert);
-  return ParseDate(workday, holiday, convert, pstDate);
-}
+  dateInfo = callHttps(url_Date);
 
-#define START_YEAR    (1970)
-#define SECOND_DAY    (86400L)   //60*60*24
-#define SECOND_HOUR   (3600)    //60*60
-#define SECOND_MIN    (60)      //60
+  return ParseDate(dateInfo, pstDate);
+}
 
 static const uint16_t mon_yday[][13] =
 {
@@ -179,7 +205,7 @@ static uint16_t getDaysForYear(uint16_t year)
 }
  
 //根据秒数计算日期时间
-static void GetTime(unsigned long UlEpochTime, Time *pstTime)
+extern void GetTime(unsigned long UlEpochTime, Time *pstTime)
 {
   uint16_t curYear = START_YEAR;
   unsigned long leftDays = UlEpochTime / SECOND_DAY;

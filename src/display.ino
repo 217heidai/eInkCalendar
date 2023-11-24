@@ -51,55 +51,64 @@ static bool RefreshDate(void)
   Date stDate;
   uint16_t dataWidth;
   char disp[100];
+  int i=0;
   
-  memset(&stDate, 0, sizeof(stDate));
-  if (GetDate(&stDate))
+  for (i=0; i<MAX_TRY_COUNT; i++)
   {
-    //年月日
-    u8g2Fonts.setFont(u8g2_mfyuanhei_16_gb2312);//设置为大字体
-    sprintf(disp, "%d-%02d-%02d", stDate.time.year, stDate.time.month, stDate.time.day);
-    u8g2Fonts.drawUTF8(0, FONT_SIZE_CHINESE_LARGE, disp);
-    //节日
+    memset(&stDate, 0, sizeof(stDate));
+    if(GetDate(&stDate))
+    {
+      break;
+    }
+  }
+  if (i >= MAX_TRY_COUNT)
+  {
+    return false;
+  }
+
+  //年月日
+  u8g2Fonts.setFont(u8g2_mfxinran_16_number);//设置为大字体
+  sprintf(disp, "%d-%02d-%02d", stDate.time.year, stDate.time.month, stDate.time.day);
+  u8g2Fonts.drawUTF8(0, FONT_SIZE_CHINESE_LARGE, disp);
+
+  //画线
+  //display.drawLine(0, FONT_SIZE_CHINESE_LARGE + 3, SCREEN_WIDTH, FONT_SIZE_CHINESE_LARGE + 3, COLOR_BLACK);
+  display.fillRect(0, FONT_SIZE_CHINESE_LARGE + 4, SCREEN_WIDTH, 2, COLOR_BLACK);
+
+  //节日
+  memset(disp, 0, sizeof(disp));
+  //sprintf(stDate.holiday, "日值月破 大事不宜");
+  if(strlen(disp)==0 && strlen(stDate.holiday))
+  {
     sprintf(disp, "%s", stDate.holiday);
-    if(strlen(disp))
-    {
-      SetForegroundColorRED(); //设置为红色
+  }
+  if(strlen(disp)==0 && strlen(stDate.term))
+  {
+    sprintf(disp, "%s", stDate.term);
+  }
+  if(strlen(disp)==0 && strlen(stDate.lunar_festival))
+  {
+    sprintf(disp, "%s", stDate.lunar_festival);
+  }
+  if(strlen(disp))
+  {
+    SetForegroundColorRED(); //设置为红色
 
-      u8g2Fonts.setFont(u8g2_mfyuanhei_16_gb2312);//设置为大字体
-      dataWidth = u8g2Fonts.getUTF8Width(disp);
-      u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 2 + 4, disp);
+    u8g2Fonts.setFont(u8g2_sarasa_16_gb2312);//设置为大字体
+    dataWidth = u8g2Fonts.getUTF8Width(disp);
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 2 + 6, disp);
 
-      sprintf(disp, "(%s)", stDate.holidayRemark);
-      if(strlen(disp))
-      {
-        u8g2Fonts.setFont(chinese_city_gb2312);//设置为正常字体
-        dataWidth = u8g2Fonts.getUTF8Width(disp);
-        u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 2 + 4 + FONT_SIZE_CHINESE_SPACING, disp); 
-      }
+    SetForegroundColorBLACK(); //设置为黑色
+  }
 
-      SetForegroundColorBLACK(); //设置为黑色
-    }
-    else
-    {
-      u8g2Fonts.setFont(u8g2_mfyuanhei_16_gb2312);//设置为大字体
-      sprintf(disp, "%s", stDate.holidayRemark);
-      if(strlen(disp))
-      {
-        SetForegroundColorRED(); //设置为红色
-
-        dataWidth = u8g2Fonts.getUTF8Width(disp);
-        u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 2 + 4, disp);
-
-        SetForegroundColorBLACK(); //设置为黑色
-      }
-    }
-
-    //设置为正常字体
-    u8g2Fonts.setFont(chinese_city_gb2312);
-    //星期
-    GetWeekday(disp, stDate.time.week);
-    u8g2Fonts.drawUTF8(0, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING, disp);
-    //干支 生肖
+  //设置为正常字体
+  u8g2Fonts.setFont(chinese_city_gb2312);
+  //星期
+  GetWeekday(disp, stDate.time.week);
+  u8g2Fonts.drawUTF8(0, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING, disp);
+  //干支 生肖
+  if(strlen(stDate.ganzhi))
+  {
     sprintf(disp, "农历%s%s年", stDate.ganzhi, stDate.shengxiao);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING, disp);
@@ -107,25 +116,60 @@ static bool RefreshDate(void)
     sprintf(disp, "%s", stDate.convert);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING * 2, disp);
-
-    //大数字日期
-    if (!stDate.isWorkday) //节假日修改为红色数字
-    {
-      SetForegroundColorRED(); //设置为红色
-    }
-    u8g2Fonts.setFont(u8g2_mfxinran_92_number);
-    sprintf(disp, "%d", stDate.time.day);
-    dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + FONT_SIZE_NUMBER, disp);
-    if (!stDate.isWorkday) //恢复为黑白色
-    {
-      SetForegroundColorBLACK(); //设置为黑色
-    }
-
-    return true;
   }
 
-  return false;
+  //大数字日期
+  if (!stDate.isWorkday) //节假日修改为红色数字
+  {
+    SetForegroundColorRED(); //设置为红色
+  }
+  u8g2Fonts.setFont(u8g2_mfxinran_92_number);
+  sprintf(disp, "%d", stDate.time.day);
+  dataWidth = u8g2Fonts.getUTF8Width(disp);
+  u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + FONT_SIZE_NUMBER, disp);
+  if (!stDate.isWorkday) //恢复为黑白色
+  {
+    SetForegroundColorBLACK(); //设置为黑色
+  }
+
+  //宜忌
+  if (strlen(stDate.yi) && strcmp(stDate.yi, stDate.ji)==0)
+  {
+    u8g2Fonts.setFont(u8g2_sarasa_16_gb2312);
+    SetForegroundColorRED(); //设置为红色
+    sprintf(disp, "%s", stDate.yi);
+    dataWidth = u8g2Fonts.getUTF8Width(disp);
+    u8g2Fonts.drawUTF8(SCREEN_WIDTH / 2 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_LARGE/2, disp);
+    SetForegroundColorBLACK(); //设置为黑色
+  }
+  else
+  {
+    u8g2Fonts.setFont(u8g2_sarasa_16_gb2312);
+    SetForegroundColorRED(); //设置为红色
+    sprintf(disp, "%s", "宜");
+    dataWidth = u8g2Fonts.getUTF8Width(disp);
+    u8g2Fonts.drawUTF8(SCREEN_WIDTH / 4 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2), disp);
+    sprintf(disp, "%s", "忌");
+    dataWidth = u8g2Fonts.getUTF8Width(disp);
+    u8g2Fonts.drawUTF8(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2), SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2), disp);
+    
+    u8g2Fonts.setFont(chinese_city_gb2312);
+    if(strlen(stDate.yi))
+    {
+      sprintf(disp, "%s", stDate.yi);
+      dataWidth = u8g2Fonts.getUTF8Width(disp);
+      u8g2Fonts.drawUTF8(SCREEN_WIDTH / 4 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_SPACING, disp);
+    }
+    if(strlen(stDate.ji))
+    {
+      sprintf(disp, "%s", stDate.ji);
+      dataWidth = u8g2Fonts.getUTF8Width(disp);
+      u8g2Fonts.drawUTF8(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2), SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_SPACING, disp);
+    }
+    SetForegroundColorBLACK(); //设置为黑色
+  }
+
+  return true;
 }
 
 static void display_icon_weather(uint16_t x, uint16_t y, char *weatherCode) //天气图标显示
@@ -180,87 +224,82 @@ static bool RefreshWeather(void)
   uint16_t y = (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2; //y起始位置
   uint16_t temp_x, temp_y;
   uint16_t circle_x;
+  int i = 0;
 
-  memset(&stWeather, 0, sizeof(stWeather));
-  if (GetWeather(&stWeather))
+  for (i=0; i<MAX_TRY_COUNT; i++)
   {
-    //设置为大字体
-    u8g2Fonts.setFont(u8g2_mfyuanhei_16_gb2312);
-    //位置
-    sprintf(disp, "%s", stWeather.city);
-    dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE, disp);
-
-    //天气图标
-    if(!gisNight)
+    memset(&stWeather, 0, sizeof(stWeather));
+    if(GetWeather(&stWeather))
     {
-      display_icon_weather(x, y, stWeather.date_code_day);
+      break;
     }
-    else
-    {
-      display_icon_weather(x, y, stWeather.date_code_night);
-    }
-
-    //设置正常字体
-    u8g2Fonts.setFont(chinese_city_gb2312);
-    //天气
-    if(String(stWeather.date_text_day) == String(stWeather.date_text_night))
-    {
-      sprintf(disp, "%s", stWeather.date_text_day);
-    }
-    else
-    {
-      sprintf(disp, "%s转%s", stWeather.date_text_day, stWeather.date_text_night);
-    }
-    dataWidth = u8g2Fonts.getUTF8Width(disp);
-    temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING;
-    u8g2Fonts.drawUTF8(x, temp_y, disp);
-
-    //最低温度
-    sprintf(disp, "%s", stWeather.date_low);
-    dataWidth = u8g2Fonts.getUTF8Width(disp);
-    temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING*2;
-    u8g2Fonts.drawUTF8(x, temp_y, disp);
-    temp_x = x + dataWidth;
-    //画圆圈
-    circle_x = temp_x + 3; //计算圈圈的位置
-    display.drawCircle(circle_x, temp_y - FONT_SIZE_CHINESE_SPACING + 5, 2, 0);
-    //最高温度
-    sprintf(disp, " ~ %s", stWeather.date_high);
-    dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8(temp_x, temp_y, disp);
-    temp_x = temp_x + dataWidth;
-    //画圆圈
-    circle_x = temp_x + 3; //计算圈圈的位置
-    display.drawCircle(circle_x, temp_y - FONT_SIZE_CHINESE_SPACING + 5, 2, 0);
-  
-    return true;
+  }
+  if (i >= MAX_TRY_COUNT)
+  {
+    return false;
   }
 
-  return false;
-}
+  //设置为大字体
+  u8g2Fonts.setFont(u8g2_mfxinran_16_number);
+  //位置
+  sprintf(disp, "%s", stWeather.location);
+  dataWidth = u8g2Fonts.getUTF8Width(disp);
+  u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE, disp);
 
-static bool RefreshLifeIndex(void)
-{
-  LifeIndex stLifeIndex;
-  char disp[120];
-  uint16_t x = 300; //x起始位置
-  uint16_t y = (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING * 3; //y起始位置
-
-  memset(&stLifeIndex, 0, sizeof(stLifeIndex));
-  if (GetLifeIndex(&stLifeIndex))
+  //天气图标
+  if(!gisNight)
   {
-    //设置正常字体
-    u8g2Fonts.setFont(chinese_city_gb2312);
-
-    //刷紫外线指数
-    sprintf(disp, "紫外线%s", stLifeIndex.uvi);
-    u8g2Fonts.drawUTF8(x, y, disp);
-
-    return true;
+    display_icon_weather(x, y, stWeather.code_day);
+  }
+  else
+  {
+    display_icon_weather(x, y, stWeather.code_night);
   }
 
-  return false;
+  //设置正常字体
+  u8g2Fonts.setFont(chinese_city_gb2312);
+  //天气
+  if(String(stWeather.text_day) == String(stWeather.text_night))
+  {
+    sprintf(disp, "%s", stWeather.text_day);
+  }
+  else
+  {
+    sprintf(disp, "%s转%s", stWeather.text_day, stWeather.text_night);
+  }
+  dataWidth = u8g2Fonts.getUTF8Width(disp);
+  temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING;
+  u8g2Fonts.drawUTF8(x, temp_y, disp);
+
+  //最低温度
+  sprintf(disp, "%s", stWeather.low);
+  dataWidth = u8g2Fonts.getUTF8Width(disp);
+  temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING*2;
+  u8g2Fonts.drawUTF8(x, temp_y, disp);
+  temp_x = x + dataWidth;
+  //画圆圈
+  circle_x = temp_x + 3; //计算圈圈的位置
+  display.drawCircle(circle_x, temp_y - FONT_SIZE_CHINESE_SPACING + 5, 2, 0);
+  //最高温度
+  sprintf(disp, " ~ %s", stWeather.high);
+  dataWidth = u8g2Fonts.getUTF8Width(disp);
+  u8g2Fonts.drawUTF8(temp_x, temp_y, disp);
+  temp_x = temp_x + dataWidth;
+  //画圆圈
+  circle_x = temp_x + 3; //计算圈圈的位置
+  display.drawCircle(circle_x, temp_y - FONT_SIZE_CHINESE_SPACING + 5, 2, 0);
+
+  //紫外线指数
+  //temp_y = (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING * 3; //y起始位置
+  //sprintf(disp, "紫外线%s", stWeather.uvi);
+  //u8g2Fonts.drawUTF8(x, temp_y, disp);
+
+  //穿衣指数
+  temp_y = (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING * 3; //y起始位置
+  sprintf(disp, "体感%s", stWeather.dressing);
+  u8g2Fonts.drawUTF8(x, temp_y, disp);
+
+  return true;
 }
 
 static bool RefreshHitokoto(void)
@@ -268,24 +307,17 @@ static bool RefreshHitokoto(void)
   Hitokoto stHitokoto;
   uint16_t dataWidth;
   char disp[120];
+  int i = 0;
 
-  memset(&stHitokoto, 0, sizeof(stHitokoto));
-  if (GetHitokoto(&stHitokoto))
+  for (i=0; i<MAX_TRY_COUNT; i++)
   {
-    u8g2Fonts.setFont(chinese_city_gb2312);
-    //一言
-    sprintf(disp, "%s", stHitokoto.hitokoto);
-    dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), disp);
-    //一言出处
-    sprintf(disp, "%s", stHitokoto.from);
-    if(strlen(disp))
+    memset(&stHitokoto, 0, sizeof(stHitokoto));
+    if(GetHitokoto(&stHitokoto))
     {
-      dataWidth = u8g2Fonts.getUTF8Width(disp);
-      u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth - FONT_SIZE_CHINESE * 2, SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), disp);
+      break;
     }
   }
-  else
+  if (i >= MAX_TRY_COUNT)
   {
     u8g2Fonts.setFont(chinese_city_gb2312);
     dataWidth = u8g2Fonts.getUTF8Width(DefaultHitokoto);
@@ -295,23 +327,43 @@ static bool RefreshHitokoto(void)
     u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth - FONT_SIZE_CHINESE * 2, SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), DefaultHitokotoFrom);
   }
 
+  //画线
+  display.fillRect(0, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 2 - 3, SCREEN_WIDTH, 2, COLOR_BLACK);
+
+  u8g2Fonts.setFont(chinese_city_gb2312);
+  //一言
+  sprintf(disp, "%s", stHitokoto.hitokoto);
+  dataWidth = u8g2Fonts.getUTF8Width(disp);
+  u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), disp);
+  //一言出处
+  sprintf(disp, "%s", stHitokoto.from);
+  dataWidth = u8g2Fonts.getUTF8Width(disp);
+  if (dataWidth <= SCREEN_WIDTH/2)
+  {
+    u8g2Fonts.drawUTF8(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2 ), SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), disp);
+  }
+  else
+  {
+    u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), disp);
+  }
+
   return true;
 }
 
-static void RefreshBattery(void)
+static bool RefreshBattery(void)
 {
   //电量百分比
   uint8_t percentage = bat_get_percentage();
   
   //电量图标
-  int16_t x_start = 3;
-  int16_t y_start = SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING;
   int16_t head_width  = 3;
   int16_t head_height = 6;
   int16_t body_width  = 24;
   int16_t body_height = 14;
   int16_t full_width  = (body_width - 2 - 2) * percentage / 100; //填充宽度
   int16_t full_height = body_height - 2 - 2; //填充高度，留1像素间隙
+  int16_t x_start = SCREEN_WIDTH - head_width - body_width;
+  int16_t y_start = (FONT_SIZE_CHINESE_LARGE - body_height) / 2 + 2;
   uint16_t color = COLOR_BLACK; //颜色
   if(percentage <= 10) color = COLOR_RED; //低于10%使用红色
   //head
@@ -329,19 +381,32 @@ static void RefreshBattery(void)
     int16_t y_full = y_start + (FONT_SIZE_CHINESE_SPACING - full_height)/2;
     display.fillRect(x_full, y_full, full_width, full_height, color);
   }
+
+  return true;
 }
 
 extern void display_MainPage(void)
 {
+  unsigned long ulEpochTime;
+  Time stTime;
+
   display.setPartialWindow(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH); //设置全局刷新
   display.firstPage();
   do
   {
-    RefreshDate();//刷新日期
-    RefreshWeather();//刷新天气
-    RefreshLifeIndex();//刷新天气指数
-    RefreshHitokoto();//刷新一言
-    RefreshBattery();//刷新电量
+    if(!RefreshDate()) return;//刷新日期
+    if(!RefreshWeather()) return;//刷新天气
+    if(!RefreshHitokoto()) return;//刷新一言
+    if(!RefreshBattery()) return;//刷新电量
   }
   while (display.nextPage());
+
+  //更新刷新时间
+  if(GetNTPTime(&ulEpochTime))
+  {
+    GetTime(ulEpochTime, &stTime);
+    Serial.printf("NTP Time: %04d/%02d/%02d %02d:%02d:%02d\n", stTime.year, stTime.month, stTime.day, stTime.hour, stTime.minute, stTime.second);
+    ESP.rtcUserMemoryWrite(RTCdz_EpochTime_Now, (uint32_t *)&ulEpochTime, sizeof(ulEpochTime));
+    ESP.rtcUserMemoryWrite(RTCdz_EpochTime_LastUpdate, (uint32_t *)&ulEpochTime, sizeof(ulEpochTime));
+  }
 }

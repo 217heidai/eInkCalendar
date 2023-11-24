@@ -2,86 +2,74 @@
 static bool ParseWeather(String content, Weather *pstWeather)
 {
   DynamicJsonDocument json(2560); //分配内存,动态
+  //content.replace("\\", "");
+  //Serial.println(content);
+  //content = content.substring(1, content.length()-1);
   DeserializationError error = deserializeJson(json, content); //解析json
-
   if (error)
   {
     Serial.print("天气json配置失败:");
-    Serial.println(error.c_str());
+    Serial.println(error.f_str());
     return false;
   }
+  serializeJsonPretty(json, Serial);
+  Serial.println("");
 
-  //检查API是否有返回错误信息，有返回则进入休眠
-  if (json["status_code"].isNull() == 0) //检查到不为空
+  if (!json["location"].isNull())    //位置
   {
-    strcpy(pstWeather->status_code, json["status_code"]);
-    String errmsg = "天气获取异常: " + String(pstWeather->status_code);
-    Serial.println(errmsg.c_str());
-    return false;
+    strcpy(pstWeather->location, json["location"]);
   }
-
-  // 复制我们感兴趣的字符串，先检查是否为空，空会复制失败导致系统无限重启
-  if (json["results"][0]["location"]["name"].isNull() == 0)  //城市名
-    strcpy(pstWeather->city, json["results"][0]["location"]["name"]);
-  if (json["results"][0]["last_update"].isNull() == 0)       //更新时间
-    strcpy(pstWeather->last_update, json["results"][0]["last_update"]);
-
-  if (json["results"][0]["daily"][0]["date"].isNull() == 0)        //日期
-    strcpy(pstWeather->date, json["results"][0]["daily"][0]["date"]);
-
-  if (json["results"][0]["daily"][0]["text_day"].isNull() == 0)    //白天天气现象
-    strcpy(pstWeather->date_text_day, json["results"][0]["daily"][0]["text_day"]);
-
-  if (json["results"][0]["daily"][0]["code_day"].isNull() == 0)    //白天天气代码
-    strcpy(pstWeather->date_code_day, json["results"][0]["daily"][0]["code_day"]);
-
-  if (json["results"][0]["daily"][0]["text_night"].isNull() == 0)    //晚间天气现象
-    strcpy(pstWeather->date_text_night, json["results"][0]["daily"][0]["text_night"]);
-
-  if (json["results"][0]["daily"][0]["code_night"].isNull() == 0)    //晚间天气代码
-    strcpy(pstWeather->date_code_night, json["results"][0]["daily"][0]["code_night"]);
-
-  if (json["results"][0]["daily"][0]["high"].isNull() == 0)
-    strcpy(pstWeather->date_high, json["results"][0]["daily"][0]["high"]);  //最高温度
-
-  if (json["results"][0]["daily"][0]["low"].isNull() == 0)             //最低温度
-    strcpy(pstWeather->date_low, json["results"][0]["daily"][0]["low"]);
-
-  if (json["results"][0]["daily"][0]["humidity"].isNull() == 0)                //湿度
-    strcpy(pstWeather->date_humidity, json["results"][0]["daily"][0]["humidity"]);
-
-  if (json["results"][0]["daily"][0]["wind_scale"].isNull() == 0)        //风力等级
-    strcpy(pstWeather->date_wind_scale, json["results"][0]["daily"][0]["wind_scale"]);
-  return true;
-}
-
-
-//使用Json解析天气数据，天气实况
-static bool ParseLifeIndex(String content, LifeIndex *pstLifeIndex)
-{
-  DynamicJsonDocument json(1536); //分配内存,动态
-  DeserializationError error = deserializeJson(json, content); //解析json
-
-  if (error)
+  else
   {
-    Serial.print("天气指数加载json配置失败:");
-    Serial.println(error.c_str());
+    json.clear();
+    Serial.println("天气json配置失败");
     return false;
   }
-
-  //检查API是否有返回错误信息，有返回则进入休眠
-  if (json["status_code"].isNull() == 0) //检查到不为空
+  if (!json["text_day"].isNull())    //白天天气现象
   {
-    strcpy(pstLifeIndex->status_code, json["status_code"]);
-    String errmsg = "天气指数获取异常: " + String(pstLifeIndex->status_code);
-    Serial.println(errmsg.c_str());
-    return false;
+    strcpy(pstWeather->text_day, json["text_day"]);
   }
-
-  // 复制我们感兴趣的字符串 ,先检查是否为空，空会导致系统无限重启
-  // isNull()检查是否为空 空返回1 非空0
-  if (json["results"][0]["suggestion"]["uv"]["brief"].isNull() == 0)          //紫外线指数
-    strcpy(pstLifeIndex->uvi, json["results"][0]["suggestion"]["uv"]["brief"]);
+  if (!json["code_day"].isNull())    //白天天气代码
+  {
+    strcpy(pstWeather->code_day, json["code_day"]);
+  }
+  if (!json["text_night"].isNull())    //晚间天气现象
+  {
+    strcpy(pstWeather->text_night, json["text_night"]);
+  }
+  if (!json["code_night"].isNull())    //晚间天气代码
+  {
+    strcpy(pstWeather->code_night, json["code_night"]);
+  }
+  if (!json["high"].isNull())
+  {
+    strcpy(pstWeather->high, json["high"]);  //最高温度
+  }
+  if (!json["low"].isNull())             //最低温度
+  {
+    strcpy(pstWeather->low, json["low"]);
+  }
+  if (!json["humidity"].isNull())                //湿度
+  {
+    strcpy(pstWeather->humidity, json["humidity"]);
+  }
+  if (!json["wind_direction"].isNull())                //风向
+  {
+    strcpy(pstWeather->wind_direction, json["wind_direction"]);
+  }
+  if (!json["wind_speed"].isNull())                //风速，单位km/h
+  {
+    strcpy(pstWeather->wind_speed, json["wind_speed"]);
+  }
+  if (!json["dressing"].isNull())                //穿衣
+  {
+    strcpy(pstWeather->dressing, json["dressing"]);
+  }
+  if (!json["uv"].isNull())                //紫外线指数
+  {
+    strcpy(pstWeather->uv, json["uv"]);
+  }
+  json.clear();
   return true;
 }
 
@@ -89,10 +77,4 @@ extern bool GetWeather(Weather *pstWeather)
 {
   String payload = callHttps(url_Weather);
   return ParseWeather(payload, pstWeather);
-}
-
-extern bool GetLifeIndex(LifeIndex *pstLifeIndex)
-{
-  String payload = callHttps(url_LifeIndex);
-  return ParseLifeIndex(payload, pstLifeIndex);
 }

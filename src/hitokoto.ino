@@ -2,18 +2,28 @@
 static bool ParseHitokoto(String content, Hitokoto *pstHitokoto)
 {
   DynamicJsonDocument json(1536); //分配内存,动态
+  //content.replace("\\", "");
+  //Serial.println(content);
+  //content = content.substring(1, content.length()-1);
   DeserializationError error = deserializeJson(json, content); //解析json
-
   if (error)
   {
     Serial.print("一言加载json配置失败:");
-    Serial.println(error.c_str());
+    Serial.println(error.f_str());
     return false;
   }
+  serializeJsonPretty(json, Serial);
+  Serial.println("");
 
   if(!json["hitokoto"].isNull())
   {
     strcpy(pstHitokoto->hitokoto, json["hitokoto"]);
+  }
+  else
+  {
+    json.clear();
+    Serial.println("一言加载json配置失败");
+    return false;
   }
 
   if(!json["from"].isNull())
@@ -24,7 +34,7 @@ static bool ParseHitokoto(String content, Hitokoto *pstHitokoto)
   {
     strcpy(pstHitokoto->from, "佚名");
   }
-
+  json.clear();
   return true;
 }
 

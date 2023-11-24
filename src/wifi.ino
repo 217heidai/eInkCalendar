@@ -1,5 +1,3 @@
-ESP8266WiFiMulti WiFiMulti;
-
 extern bool connectToWifi(void)
 {
   uint8_t i = 0;
@@ -27,41 +25,55 @@ extern bool connectToWifi(void)
   return true;
 }
 
-//https请求
 extern String callHttps(const char *url)
 {
-  String payload = "";
-  std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-
-  //client->setFingerprint(fingerprint);
-  // Or, if you happy to ignore the SSL certificate, then use the following line instead:
-  client->setInsecure();
-  client->setBufferSizes(512, 512);
-
+  String payload;
+  WiFiClientSecure client;
   HTTPClient https;
+
+  client.setInsecure(); //不检验证书
+  client.setBufferSizes(512, 256); //缓存大小
   https.setReuse(false); //是否keep-alive
 
+  delay(1);
   Serial.printf("[HTTPS] begin... url: %s\n", url);
-  if (https.begin(*client, String(url))) {  // HTTPS
-    // start connection and send HTTP header
-    int httpCode = https.GET();
-    Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
-
-    // httpCode will be negative on error
-    if (httpCode > 0) {
-      // file found at server
-      if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+  if (https.begin(client, String(url)))
+  {
+    delay(1);
+    int httpsCode = https.GET();
+    delay(1);
+    if (httpsCode > 0)  //判断有无返回值
+    {
+      Serial.printf("[HTTPS] GET... code: %d\n", httpsCode);
+      if (httpsCode == 200 || httpsCode == 304 || httpsCode == 403 || httpsCode == 404 || httpsCode == 500) //判断请求是正确
+      {
         payload = https.getString();
         Serial.println(payload);
+        return payload;
       }
-    } else {
-      Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
+      else
+      {
+        //Serial.print("请求错误："); Serial.println(httpsCode); Serial.println(" ");
+        payload = "{\"status_code\":\"" + String("请求错误:") + String(httpsCode) + "\"}";  //将错误值转换成json格式
+        Serial.println(payload);
+        return payload;
+      }
     }
-
+    else
+    {
+      //Serial.println(" "); Serial.print("GET请求错误："); Serial.println(httpsCode);
+      //Serial.printf("[HTTPS] GET... 失败, 错误: %s\n", https.errorToString(httpsCode).c_str());
+      payload = "{\"status_code\":\"" + String(https.errorToString(httpsCode).c_str()) + "\"}";  //将错误值转换成json格式
+      Serial.println(payload);
+      return payload;
+    }
     https.end();
-  } else {
-    Serial.printf("[HTTPS] Unable to connect\n");
   }
-
-  return payload;
+  else
+  {
+    //Serial.printf("[HTTPS] 无法连接服务器\n");
+    payload = "{\"status_code\":\"" + String("无法连接服务器") + "\"}";  //将错误值转换成json格式
+    Serial.println(payload);
+    return payload;
+  }
 }
