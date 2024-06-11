@@ -65,14 +65,16 @@ static const char *url_Date = "https://api.heidai.space/date";
 // 天气，修改location为所在城市拼音，首字母大写，可以用浏览器打开链接测试下
 static const char *url_Weather = "https://api.heidai.space/weather/?location=Shanghai";
 // 一言，max为返回句子的最大字数
-static const char *url_Hitokoto = "https://api.heidai.space/hitokoto/?max=30";
+static const char *url_Hitokoto = "https://api.heidai.space/hitokoto/?max=28";
+// 加密货币
+static const char *url_Coin = "https://api.heidai.space/coin";
 
 // 刷新间隔
-#define REFRESH_FREQUENCY 4   //每x小时刷新
-#define REFRESH_TIME_START 7  //刷新屏幕的时间范围，8点以后刷新
-#define REFRESH_TIME_END 20   //刷新屏幕的时间范围，20点前刷新
+#define REFRESH_FREQUENCY  1   //每x小时刷新
+#define REFRESH_TIME_START 7   //刷新屏幕的时间范围，8点以后刷新
+#define REFRESH_TIME_END  20   //刷新屏幕的时间范围，20点前刷新
 // 休眠时间
-#define SLEEP_TIME 60  //60分钟
+#define SLEEP_TIME (REFRESH_FREQUENCY * 60)
 
 // 是否为夜间
 bool gisNight = false;
@@ -127,6 +129,14 @@ typedef struct _Hitokoto {
   char hitokoto[100];  //一言
   char from[64];       //出自
 } Hitokoto;
+
+//加密货币
+typedef struct _CryptoCoin {
+  char price_btc[20];   //BTC 价格
+  char price_eth[20];   //ETH 价格
+  char price_bnb[20];   //BNB 价格
+  char price_doge[20];  //DOGE 价格
+} CryptoCoin;
 
 static const char DefaultHitokoto[] = "Talk is cheap. Show me the code.";  //默认信息
 static const char DefaultHitokotoFrom[] = "Linus Torvalds";

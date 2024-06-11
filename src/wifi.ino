@@ -33,6 +33,7 @@ extern String callHttps(const char *url)
 
   client.setInsecure(); //不检验证书
   client.setBufferSizes(512, 256); //缓存大小
+  client.setTimeout(20000); //超时时间20s
   https.setReuse(false); //是否keep-alive
 
   delay(1);

@@ -4,24 +4,24 @@ extern void display_test_str(void) //中文字体测试
   String str = "2023年07月04日 星期二 上海";
   const char* character = str.c_str(); 
 
-  display.setPartialWindow(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH/2); //设置刷新区域
+  u8g2Fonts.setFont(chinese_city_gb2312);
+  dataWidth = u8g2Fonts.getUTF8Width(character);
+  display.setPartialWindow((SCREEN_WIDTH - dataWidth)/2, 0, dataWidth, FONT_SIZE_CHINESE_SPACING * 3); //设置刷新区域
   display.firstPage();
   do
   {
-    u8g2Fonts.setFont(chinese_city_gb2312);
-    dataWidth = u8g2Fonts.getUTF8Width(character);
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING, character);
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING * 2, character);
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING * 3, character);
   }
   while (display.nextPage());
 
-  display.setPartialWindow(0, SCREEN_HEIGTH/2, SCREEN_WIDTH, SCREEN_HEIGTH/2); //设置刷新区域
+  u8g2Fonts.setFont(u8g2_mfxinran_16_number);
+  dataWidth = u8g2Fonts.getUTF8Width(character);
+  display.setPartialWindow((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2, dataWidth, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING * 3); //设置刷新区域
   display.firstPage();
   do
   {
-    u8g2Fonts.setFont(u8g2_mfxinran_16_number);
-    dataWidth = u8g2Fonts.getUTF8Width(character);
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING, character);
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING * 2, character);
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING * 3, character);

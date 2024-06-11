@@ -151,8 +151,8 @@ extern bool isNeedRefresh(void)
   }
 
   //正常时间下的刷新规则
-  //if((((stTime.hour - stTime_LastUpdate.hour)>= REFRESH_FREQUENCY) || (stTime.day != stTime_LastUpdate.day)) && ((stTime.hour > REFRESH_TIME_START) && (stTime.hour < REFRESH_TIME_END))) //距离上次刷新超过REFRESH_FREQUENCY小时，或者日期发生变化
   if(((stTime.hour - stTime_LastUpdate.hour)>= REFRESH_FREQUENCY) || (stTime.day != stTime_LastUpdate.day)) //距离上次刷新超过REFRESH_FREQUENCY小时，或者日期发生变化
+  //if((((stTime.hour - stTime_LastUpdate.hour)>= REFRESH_FREQUENCY) || (stTime.day != stTime_LastUpdate.day)) && ((stTime.hour > REFRESH_TIME_START) && (stTime.hour < REFRESH_TIME_END))) //距离上次刷新超过REFRESH_FREQUENCY小时，或者日期发生变化，且在允许的刷新时间范围内
   {
     isRefresh = true;
     goto END;

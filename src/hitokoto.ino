@@ -19,6 +19,10 @@ static bool ParseHitokoto(String content, Hitokoto *pstHitokoto)
   {
     strcpy(pstHitokoto->hitokoto, json["hitokoto"]);
   }
+  else if(!json["poetry"].isNull())
+  {
+    strcpy(pstHitokoto->hitokoto, json["poetry"]);
+  }
   else
   {
     json.clear();

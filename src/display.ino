@@ -82,11 +82,11 @@ static bool RefreshDate(void)
   {
     sprintf(disp, "%s", stDate.holiday);
   }
-  if(strlen(disp)==0 && strlen(stDate.term))
+  if((strlen(disp)==0 && strlen(stDate.term)) || (stDate.isWorkday && strlen(stDate.term)))
   {
     sprintf(disp, "%s", stDate.term);
   }
-  if(strlen(disp)==0 && strlen(stDate.lunar_festival))
+  if((strlen(disp)==0 && strlen(stDate.lunar_festival)) || (stDate.isWorkday && strlen(stDate.lunar_festival)))
   {
     sprintf(disp, "%s", stDate.lunar_festival);
   }
@@ -350,6 +350,58 @@ static bool RefreshHitokoto(void)
   return true;
 }
 
+static bool RefreshCoin(void)
+{
+  CryptoCoin stCryptoCoin;
+  uint16_t dataWidth;
+  uint16_t start_x = 1;
+  char disp[120];
+  int i = 0;
+
+  for (i=0; i<MAX_TRY_COUNT; i++)
+  {
+    memset(&stCryptoCoin, 0, sizeof(stCryptoCoin));
+    if(GetCoin(&stCryptoCoin))
+    {
+      break;
+    }
+  }
+  if (i >= MAX_TRY_COUNT)
+  {
+    return true; // 加密货币价格获取失败不影响
+  }
+
+  u8g2Fonts.setFont(chinese_city_gb2312);
+  if (strlen(stCryptoCoin.price_btc))
+  {
+    //btc
+    sprintf(disp, "BTC");
+    u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2 - FONT_SIZE_CHINESE_SPACING*2, disp);
+    sprintf(disp, "%s", stCryptoCoin.price_btc);
+    dataWidth = u8g2Fonts.getUTF8Width(disp);
+    u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2 - FONT_SIZE_CHINESE_SPACING, disp);
+    //eth
+    if (strlen(stCryptoCoin.price_eth))
+    {
+      sprintf(disp, "ETH");
+      u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2, disp);
+      sprintf(disp, "%s", stCryptoCoin.price_eth);
+      u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING, disp);
+    }
+    //BNB
+    if (strlen(stCryptoCoin.price_bnb))
+    {
+      sprintf(disp, "BNB");
+      u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING*2, disp);
+      sprintf(disp, "%s", stCryptoCoin.price_bnb);
+      u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING*3, disp);
+    }
+  }
+
+  return true;
+}
+
+
 static bool RefreshBattery(void)
 {
   //电量百分比
@@ -397,6 +449,7 @@ extern void display_MainPage(void)
     if(!RefreshDate()) return;//刷新日期
     if(!RefreshWeather()) return;//刷新天气
     if(!RefreshHitokoto()) return;//刷新一言
+    if(!RefreshCoin()) return;//刷新加密货币
     if(!RefreshBattery()) return;//刷新电量
   }
   while (display.nextPage());
