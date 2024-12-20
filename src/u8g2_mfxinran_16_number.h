@@ -1,9 +1,6 @@
-/*
-  Fontname: -FreeType-MF XinRan(Noncommercial)-Medium-R-Normal--22-160-100-100-P-200-ISO10646-1
-  Copyright: � 2018 SN. All rights reserved.
-  Glyphs: 95/7226
-  BBX Build Mode: 0
-*/
+#ifndef _MFXINRAN_16_NUMBER_H_
+#define _MFXINRAN_16_NUMBER_H_
+
 #include <u8g2_fonts.h>
 #ifdef U8G2_USE_LARGE_FONTS
 const uint8_t u8g2_mfxinran_16_number[1873] U8G2_FONT_SECTION("u8g2_mfxinran_16_number") = 
@@ -66,4 +63,6 @@ const uint8_t u8g2_mfxinran_16_number[1873] U8G2_FONT_SECTION("u8g2_mfxinran_16_
   "\1z\14\214\375\134x\220\216\376\360A\2{\23H\372R\42Sf\324\34\21)Sl\324\274*D\0"
   "|\11C\356J\370\1\12\0}\24H\376R(Sj^\221*S\204\320\250\271)C\10\0~\14\214"
   "xY!wf\310\301!\0\0\0\0\4\377\377\0";
+#endif
+
 #endif

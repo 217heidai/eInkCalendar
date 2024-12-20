@@ -1,12 +1,12 @@
 extern void display_test_str(void) //中文字体测试
 {
   int16_t dataWidth;
-  String str = "2023年07月04日 星期二 上海";
+  String str = "日值月破，大事不宜";
   const char* character = str.c_str(); 
 
   u8g2Fonts.setFont(chinese_city_gb2312);
   dataWidth = u8g2Fonts.getUTF8Width(character);
-  display.setPartialWindow((SCREEN_WIDTH - dataWidth)/2, 0, dataWidth, FONT_SIZE_CHINESE_SPACING * 3); //设置刷新区域
+  display.setPartialWindow(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH/2); //设置刷新区域
   display.firstPage();
   do
   {
@@ -16,9 +16,9 @@ extern void display_test_str(void) //中文字体测试
   }
   while (display.nextPage());
 
-  u8g2Fonts.setFont(u8g2_mfxinran_16_number);
+  u8g2Fonts.setFont(u8g2_sarasa_16_gb2312);
   dataWidth = u8g2Fonts.getUTF8Width(character);
-  display.setPartialWindow((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2, dataWidth, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING * 3); //设置刷新区域
+  display.setPartialWindow(0, SCREEN_HEIGTH/2, SCREEN_WIDTH, SCREEN_HEIGTH); //设置刷新区域
   display.firstPage();
   do
   {

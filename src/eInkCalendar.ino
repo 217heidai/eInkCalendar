@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
-#include <WiFiClientSecure.h>
 #include <ESP8266HTTPClient.h>
+#include <WiFiClientSecureBearSSL.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
@@ -10,7 +10,13 @@
 #include "GxEPD2_display_selection_new_style.h"
 #include <U8g2_for_Adafruit_GFX.h>
 
+#include <avr/pgmspace.h>
+
 #include "bitmap.h"
+#include "gb2312.h"                    //13x13
+#include "u8g2_sarasa_16_gb2312.h"     //21x21
+#include "u8g2_mfxinran_16_number.h"   //21x21
+#include "u8g2_mfxinran_92_number.h"   //80*100
 
 //按键定义
 #define KEY_UP            5  //上方按键
@@ -36,12 +42,6 @@ ESP8266WiFiMulti WiFiMulti;
 #define COLOR_BLACK  GxEPD_BLACK  //黑色
 #define COLOR_RED    GxEPD_RED    //红色
 
-//GB2312字库
-#include "gb2312.c"                    //13x13
-#include "u8g2_sarasa_16_gb2312.c"     //21x21
-#include "u8g2_mfxinran_16_number.c"   //21x21
-#include "u8g2_mfxinran_92_number.c"   //80*100
-
 //字体大小
 #define FONT_SIZE_NUMBER 100                                           //数字字体大小，根据选择的字体大小设置
 #define FONT_SIZE_CHINESE 13                                           //小字体大小，根据选择的字体大小设置
@@ -61,13 +61,13 @@ const char *ssid     = "{ssid}";
 const char *password = "{password}";
 
 // 日期
-static const char *url_Date = "https://api.heidai.space/date";
+const char url_Date[] PROGMEM = "https://api.heidai.space/date";
 // 天气，修改location为所在城市拼音，首字母大写，可以用浏览器打开链接测试下
-static const char *url_Weather = "https://api.heidai.space/weather/?location=Shanghai";
+const char url_Weather[] PROGMEM = "https://api.heidai.space/weather/?location=Shanghai";
 // 一言，max为返回句子的最大字数
-static const char *url_Hitokoto = "https://api.heidai.space/hitokoto/?max=28";
+const char url_Hitokoto[] PROGMEM = "https://api.heidai.space/hitokoto/?max=28";
 // 加密货币
-static const char *url_Coin = "https://api.heidai.space/coin";
+const char url_Coin[] PROGMEM = "https://api.heidai.space/coin";
 
 // 刷新间隔
 #define REFRESH_FREQUENCY  1   //每x小时刷新
@@ -135,11 +135,11 @@ typedef struct _CryptoCoin {
   char price_btc[20];   //BTC 价格
   char price_eth[20];   //ETH 价格
   char price_bnb[20];   //BNB 价格
-  char price_doge[20];  //DOGE 价格
+  char price_sol[20];   //SOL 价格
 } CryptoCoin;
 
-static const char DefaultHitokoto[] = "Talk is cheap. Show me the code.";  //默认信息
-static const char DefaultHitokotoFrom[] = "Linus Torvalds";
+const char DefaultHitokoto[] PROGMEM = "Talk is cheap. Show me the code.";  //默认信息
+const char DefaultHitokotoFrom[] PROGMEM = "Linus Torvalds";
 
 
 

@@ -1,9 +1,6 @@
-/*
-  Fontname: -FreeType-Sarasa UI SC-Bold-R-Normal--22-160-100-100-P-193-ISO10646-1
-  Copyright: Copyright (c) 2015-2023, Renzhi Li (aka. Belleve Invis, belleve@typeof.net). Portions Copyright (c) 2016-2020 The Inter Project Authors. Portions Copyright (c) 2014, 2015 Adobe Systems Incorporated (http://www.adobe.com/). Portions Copyright (c) 2012 Google Inc.
-  Glyphs: 4531/43639
-  BBX Build Mode: 0
-*/
+#ifndef _SARASA_16_GB2312_H_
+#define _SARASA_16_GB2312_H_
+
 #include <u8g2_fonts.h>
 #ifdef U8G2_USE_LARGE_FONTS
 const uint8_t u8g2_sarasa_16_gb2312[256727] U8G2_FONT_SECTION("u8g2_sarasa_16_gb2312") = 
@@ -8031,3 +8028,5 @@ const uint8_t u8g2_sarasa_16_gb2312[256727] U8G2_FONT_SECTION("u8g2_sarasa_16_gb
   "\251\60C\307\16T\243l\350\224S>X\377\343\11V\0c+<\70\377\345\37\16$A+\214CF"
   "b\24\231A\323\14\33Al\304\300bL\230\215c\302l\354d\0\0";
 #endif /* U8G2_USE_LARGE_FONTS */
+
+#endif

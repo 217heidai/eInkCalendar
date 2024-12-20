@@ -51,6 +51,7 @@ static bool RefreshDate(void)
   Date stDate;
   uint16_t dataWidth;
   char disp[100];
+  char disp1[100];
   int i=0;
   
   for (i=0; i<MAX_TRY_COUNT; i++)
@@ -77,27 +78,40 @@ static bool RefreshDate(void)
 
   //节日
   memset(disp, 0, sizeof(disp));
-  //sprintf(stDate.holiday, "日值月破 大事不宜");
   if(strlen(disp)==0 && strlen(stDate.holiday))
   {
     sprintf(disp, "%s", stDate.holiday);
   }
-  if((strlen(disp)==0 && strlen(stDate.term)) || (stDate.isWorkday && strlen(stDate.term)))
+  memset(disp1, 0, sizeof(disp1));
+  if(strlen(disp1)==0 && strlen(stDate.lunar_festival))
   {
-    sprintf(disp, "%s", stDate.term);
+    sprintf(disp1, "%s", stDate.lunar_festival);
   }
-  if((strlen(disp)==0 && strlen(stDate.lunar_festival)) || (stDate.isWorkday && strlen(stDate.lunar_festival)))
+  if(strlen(disp1)==0 && strlen(stDate.term))
   {
-    sprintf(disp, "%s", stDate.lunar_festival);
+    sprintf(disp1, "%s", stDate.term);
   }
-  if(strlen(disp))
+  if (!strlen(disp) && strlen(disp1))
+  {
+    strcpy(disp, disp1);
+  }
+  if (strlen(disp) && strcmp(disp, disp1)==0)
+  {
+    memset(disp1, 0, sizeof(disp1));
+  }
+  if(strlen(disp) || strlen(disp1))
   {
     SetForegroundColorRED(); //设置为红色
-
     u8g2Fonts.setFont(u8g2_sarasa_16_gb2312);//设置为大字体
+
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 2 + 6, disp);
-
+    if (strlen(disp1))
+    {
+      dataWidth = u8g2Fonts.getUTF8Width(disp1);
+      u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 3 + 6, disp1);
+    }
+    
     SetForegroundColorBLACK(); //设置为黑色
   }
 
@@ -132,6 +146,8 @@ static bool RefreshDate(void)
     SetForegroundColorBLACK(); //设置为黑色
   }
 
+  //sprintf(stDate.yi, "%s", "日值月破 大事不宜");
+  //sprintf(stDate.ji, "%s", "日值月破 大事不宜");
   //宜忌
   if (strlen(stDate.yi) && strcmp(stDate.yi, stDate.ji)==0)
   {
@@ -174,45 +190,48 @@ static bool RefreshDate(void)
 
 static void display_icon_weather(uint16_t x, uint16_t y, char *weatherCode) //天气图标显示
 {
-  String code = weatherCode;
+  uint16_t code = atoi(weatherCode);
 
-  if (code == "0")      display.drawInvertedBitmap(x, y + 5, Bitmap_qt, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_RED);
-  else if (code == "1") display.drawInvertedBitmap(x, y, Bitmap_qt_ws, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "2") display.drawInvertedBitmap(x, y + 5, Bitmap_qt, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_RED);
-  else if (code == "3") display.drawInvertedBitmap(x, y, Bitmap_qt_ws, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "4") display.drawInvertedBitmap(x, y, Bitmap_dy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "5") display.drawInvertedBitmap(x, y, Bitmap_dy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "6") display.drawInvertedBitmap(x, y, Bitmap_dy_ws, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "7") display.drawInvertedBitmap(x, y, Bitmap_dy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "8") display.drawInvertedBitmap(x, y, Bitmap_dy_ws, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "9") display.drawInvertedBitmap(x, y + 3, Bitmap_yt, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "10") display.drawInvertedBitmap(x, y, Bitmap_zheny, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "11") display.drawInvertedBitmap(x, y, Bitmap_lzy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "12") display.drawInvertedBitmap(x, y, Bitmap_lzybbb, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "13") display.drawInvertedBitmap(x, y, Bitmap_xy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "14") display.drawInvertedBitmap(x, y, Bitmap_zhongy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "15") display.drawInvertedBitmap(x, y, Bitmap_dayu, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "16") display.drawInvertedBitmap(x, y, Bitmap_by, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "17") display.drawInvertedBitmap(x, y, Bitmap_dby, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "18") display.drawInvertedBitmap(x, y, Bitmap_tdby, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "19") display.drawInvertedBitmap(x, y, Bitmap_dongy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "20") display.drawInvertedBitmap(x, y, Bitmap_yjx, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "21") display.drawInvertedBitmap(x, y, Bitmap_zhenx, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "22") display.drawInvertedBitmap(x, y, Bitmap_xx, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "23") display.drawInvertedBitmap(x, y, Bitmap_zhongy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "24") display.drawInvertedBitmap(x, y, Bitmap_dx, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "25") display.drawInvertedBitmap(x, y, Bitmap_bx, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "26") display.drawInvertedBitmap(x, y, Bitmap_fc, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "27") display.drawInvertedBitmap(x, y, Bitmap_ys, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "28") display.drawInvertedBitmap(x, y, Bitmap_scb, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "29") display.drawInvertedBitmap(x, y, Bitmap_scb, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "30") display.drawInvertedBitmap(x, y + 5, Bitmap_w, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "31") display.drawInvertedBitmap(x, y, Bitmap_m, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "32") display.drawInvertedBitmap(x, y, Bitmap_f, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "33") display.drawInvertedBitmap(x, y, Bitmap_f, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "34") display.drawInvertedBitmap(x, y, Bitmap_jf, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else if (code == "35") display.drawInvertedBitmap(x, y, Bitmap_rdfb, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
-  else display.drawInvertedBitmap(x, y, Bitmap_wz, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK);
+  switch (code)
+  {
+    case  0: display.drawInvertedBitmap(x, y + 5, Bitmap_qt,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_RED  ); break;
+    case  1: display.drawInvertedBitmap(x, y,     Bitmap_qt_ws,  ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case  2: display.drawInvertedBitmap(x, y + 5, Bitmap_qt,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_RED  ); break;
+    case  3: display.drawInvertedBitmap(x, y,     Bitmap_qt_ws,  ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case  4: display.drawInvertedBitmap(x, y,     Bitmap_dy,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case  5: display.drawInvertedBitmap(x, y,     Bitmap_dy,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case  6: display.drawInvertedBitmap(x, y,     Bitmap_dy_ws,  ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case  7: display.drawInvertedBitmap(x, y,     Bitmap_dy,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case  8: display.drawInvertedBitmap(x, y,     Bitmap_dy_ws,  ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case  9: display.drawInvertedBitmap(x, y + 3, Bitmap_yt,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 10: display.drawInvertedBitmap(x, y,     Bitmap_zheny,  ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 11: display.drawInvertedBitmap(x, y,     Bitmap_lzy,    ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 12: display.drawInvertedBitmap(x, y,     Bitmap_lzybbb, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 13: display.drawInvertedBitmap(x, y,     Bitmap_xy,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 14: display.drawInvertedBitmap(x, y,     Bitmap_zhongy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 15: display.drawInvertedBitmap(x, y,     Bitmap_dayu,   ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 16: display.drawInvertedBitmap(x, y,     Bitmap_by,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 17: display.drawInvertedBitmap(x, y,     Bitmap_dby,    ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 18: display.drawInvertedBitmap(x, y,     Bitmap_tdby,   ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 19: display.drawInvertedBitmap(x, y,     Bitmap_dongy,  ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 20: display.drawInvertedBitmap(x, y,     Bitmap_yjx,    ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 21: display.drawInvertedBitmap(x, y,     Bitmap_zhenx,  ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 22: display.drawInvertedBitmap(x, y,     Bitmap_xx,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 23: display.drawInvertedBitmap(x, y,     Bitmap_zhongy, ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 24: display.drawInvertedBitmap(x, y,     Bitmap_dx,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 25: display.drawInvertedBitmap(x, y,     Bitmap_bx,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 26: display.drawInvertedBitmap(x, y,     Bitmap_fc,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 27: display.drawInvertedBitmap(x, y,     Bitmap_ys,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 28: display.drawInvertedBitmap(x, y,     Bitmap_scb,    ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 29: display.drawInvertedBitmap(x, y,     Bitmap_scb,    ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 30: display.drawInvertedBitmap(x, y + 5, Bitmap_w,      ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 31: display.drawInvertedBitmap(x, y,     Bitmap_m,      ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 32: display.drawInvertedBitmap(x, y,     Bitmap_f,      ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 33: display.drawInvertedBitmap(x, y,     Bitmap_f,      ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 34: display.drawInvertedBitmap(x, y,     Bitmap_jf,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    case 35: display.drawInvertedBitmap(x, y,     Bitmap_rdfb,   ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+    default: display.drawInvertedBitmap(x, y,     Bitmap_wz,     ICON_SIZE_WEATHER, ICON_SIZE_WEATHER, COLOR_BLACK); break;
+  }
 }
 
 static bool RefreshWeather(void)
@@ -395,6 +414,14 @@ static bool RefreshCoin(void)
       u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING*2, disp);
       sprintf(disp, "%s", stCryptoCoin.price_bnb);
       u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING*3, disp);
+    }
+    //SOL
+    if (strlen(stCryptoCoin.price_sol))
+    {
+      sprintf(disp, "SOL");
+      u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING*4, disp);
+      sprintf(disp, "%s", stCryptoCoin.price_sol);
+      u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING*5, disp);
     }
   }
 
