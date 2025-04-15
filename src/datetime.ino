@@ -203,7 +203,7 @@ static uint16_t getDaysForYear(uint16_t year)
 {
   return (isLeapYear(year)?366:365);
 }
- 
+
 //根据秒数计算日期时间
 extern void GetTime(unsigned long UlEpochTime, Time *pstTime)
 {
@@ -219,6 +219,10 @@ extern void GetTime(unsigned long UlEpochTime, Time *pstTime)
     daysCurYear = getDaysForYear(curYear);
   }
   pstTime->year = curYear;
+
+  //calc percentage
+  pstTime->percentage = leftDays * SCREEN_HEIGTH / getDaysForYear(curYear);
+  pstTime->percentage = pstTime->percentage == 0 ? 1 : pstTime->percentage;
 
   //calc month and day
   bool isLeepYear = isLeapYear(curYear);

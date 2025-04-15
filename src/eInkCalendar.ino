@@ -92,6 +92,7 @@ typedef struct _Time {
   uint8_t hour;
   uint8_t minute;
   uint8_t second;
+  uint8_t percentage;      //当年进度 已过去天数/总天数*SCREEN_HEIGTH
 } Time;
 
 //日期信息结构
