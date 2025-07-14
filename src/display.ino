@@ -74,7 +74,7 @@ static bool RefreshDate(void)
 
   //画线，年进度条
   display.fillRect(0, FONT_SIZE_CHINESE_LARGE + 4, stDate.time.percentage, 2, COLOR_RED);
-  display.fillRect(stDate.time.percentage,FONT_SIZE_CHINESE_LARGE + 4, SCREEN_WIDTH - stDate.time.percentage, 2, COLOR_BLACK);
+  display.fillRect(stDate.time.percentage, FONT_SIZE_CHINESE_LARGE + 4, SCREEN_WIDTH - stDate.time.percentage, 2, COLOR_BLACK);
 
   //节日
   memset(disp, 0, sizeof(disp));

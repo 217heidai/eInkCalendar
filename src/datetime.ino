@@ -221,8 +221,7 @@ extern void GetTime(unsigned long UlEpochTime, Time *pstTime)
   pstTime->year = curYear;
 
   //calc percentage
-  pstTime->percentage = leftDays * SCREEN_HEIGTH / getDaysForYear(curYear);
-  pstTime->percentage = pstTime->percentage == 0 ? 1 : pstTime->percentage;
+  pstTime->percentage = leftDays * SCREEN_WIDTH / getDaysForYear(curYear);
 
   //calc month and day
   bool isLeepYear = isLeapYear(curYear);
