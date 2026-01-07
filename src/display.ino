@@ -186,8 +186,8 @@ static bool RefreshDate(void)
   }
 
   //画线，年进度条
-  display.fillRect(0, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 2 - 3, SCREEN_WIDTH - stDate.time.percentage, 2, COLOR_RED);
-  display.fillRect(SCREEN_WIDTH - stDate.time.percentage, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 2 - 3, stDate.time.percentage, 2, COLOR_BLACK);
+  display.fillRect(0, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 2 - 3, stDate.time.percentage, 2, COLOR_BLACK);
+  display.fillRect(stDate.time.percentage, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 2 - 3, SCREEN_WIDTH - stDate.time.percentage, 2, COLOR_RED);
 
   return true;
 }
@@ -378,6 +378,7 @@ static bool RefreshCoin(void)
   CryptoCoin stCryptoCoin;
   uint16_t dataWidth;
   uint16_t start_x = 1;
+  uint16_t start_y = (SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 8)/2; //y起始位置
   char disp[120];
   int i = 0;
 
@@ -399,34 +400,28 @@ static bool RefreshCoin(void)
   {
     //btc
     sprintf(disp, "BTC");
-    u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2 - FONT_SIZE_CHINESE_SPACING*2, disp);
+    u8g2Fonts.drawUTF8(start_x, start_y + FONT_SIZE_CHINESE_SPACING*1, disp);
     sprintf(disp, "%s", stCryptoCoin.price_btc);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2 - FONT_SIZE_CHINESE_SPACING, disp);
+    u8g2Fonts.drawUTF8(start_x, start_y + FONT_SIZE_CHINESE_SPACING*2, disp);
+
     //eth
-    if (strlen(stCryptoCoin.price_eth))
-    {
-      sprintf(disp, "ETH");
-      u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2, disp);
-      sprintf(disp, "%s", stCryptoCoin.price_eth);
-      u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING, disp);
-    }
+    sprintf(disp, "ETH");
+    u8g2Fonts.drawUTF8(start_x, start_y + FONT_SIZE_CHINESE_SPACING*3, disp);
+    sprintf(disp, "%s", stCryptoCoin.price_eth);
+    u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), start_y + FONT_SIZE_CHINESE_SPACING*4, disp);
+
     //BNB
-    if (strlen(stCryptoCoin.price_bnb))
-    {
-      sprintf(disp, "BNB");
-      u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING*2, disp);
-      sprintf(disp, "%s", stCryptoCoin.price_bnb);
-      u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING*3, disp);
-    }
+    sprintf(disp, "BNB");
+    u8g2Fonts.drawUTF8(start_x, start_y + FONT_SIZE_CHINESE_SPACING*5, disp);
+    sprintf(disp, "%s", stCryptoCoin.price_bnb);
+    u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), start_y + FONT_SIZE_CHINESE_SPACING*6, disp);
+
     //SOL
-    if (strlen(stCryptoCoin.price_sol))
-    {
-      sprintf(disp, "SOL");
-      u8g2Fonts.drawUTF8(start_x, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING*4, disp);
-      sprintf(disp, "%s", stCryptoCoin.price_sol);
-      u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_SPACING*5, disp);
-    }
+    sprintf(disp, "SOL");
+    u8g2Fonts.drawUTF8(start_x, start_y + FONT_SIZE_CHINESE_SPACING*7, disp);
+    sprintf(disp, "%s", stCryptoCoin.price_sol);
+    u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), start_y + FONT_SIZE_CHINESE_SPACING*8, disp);
   }
 
   return true;
