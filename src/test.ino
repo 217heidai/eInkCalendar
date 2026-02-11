@@ -160,3 +160,37 @@ extern void display_test_battery(void)
 
   display.display(1);
 }
+
+extern void display_test_qrcode(void)
+{
+  char disp[256];
+  uint16 dataWidth = 0;
+
+  display.firstPage();
+  do
+  {
+    display.fillScreen(COLOR_WHITE);  // 填充屏幕
+
+    // 配网二维码
+    display.drawInvertedBitmap((SCREEN_WIDTH - 200) / 2, (SCREEN_HEIGTH - 200) / 2, Bitmap_QRcode, 200, 200, COLOR_BLACK);
+
+    // 标题
+    u8g2Fonts.setFont(u8g2_sarasa_16_gb2312);
+    sprintf(disp, "微信扫码配置网络");
+    Serial.println(disp);
+    dataWidth = u8g2Fonts.getUTF8Width(disp);
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, (SCREEN_HEIGTH - 200) / 2 - 2, disp);
+
+    // 操作提示
+    u8g2Fonts.setFont(chinese_city_gb2312);
+    sprintf(disp, "确保手机连接到2.4GHz WiFi");
+    Serial.println(disp);
+    dataWidth = u8g2Fonts.getUTF8Width(disp);
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING, disp);
+    sprintf(disp, "请在3分钟内完成网络配置");
+    Serial.println(disp);
+    dataWidth = u8g2Fonts.getUTF8Width(disp); // 与第一行对齐
+    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING*2, disp);
+  }
+  while (display.nextPage());
+}

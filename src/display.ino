@@ -13,6 +13,7 @@ extern void display_setup(void)
   //display_test_weather();
   //display_test_str();
   //display_test_battery();
+  //display_test_qrcode();
   //esp_sleep(SLEEP_TIME);
 }
 

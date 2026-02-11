@@ -91,3 +91,26 @@ extern float bat_get_percentage(void)
 
   return percentage;
 }
+
+//读取EEPROM中的配置
+extern void eeprom_read(uint8_t * p, uint16_t addr, uint8_t len)
+{
+  uint8_t i;
+
+  for (i = 0; i < len; i++)
+  {
+    *(p + i) = EEPROM.read(addr + i);
+  }
+}
+
+//写入EEPROM中的配置
+extern void eeprom_write(uint8_t * p, uint16_t addr, uint8_t len)
+{
+  uint8_t i;
+
+  for (i = 0; i < len; i++)
+  {
+    EEPROM.write(addr + i, *(p + i));
+  }
+
+}

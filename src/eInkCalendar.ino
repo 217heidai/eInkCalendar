@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecureBearSSL.h>
 #include <NTPClient.h>
@@ -9,6 +8,8 @@
 #include <GxEPD2_3C.h>
 #include "GxEPD2_display_selection_new_style.h"
 #include <U8g2_for_Adafruit_GFX.h>
+
+#include <EEPROM.h>
 
 #include <avr/pgmspace.h>
 
@@ -29,8 +30,7 @@
 
 //U8g2显示
 U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
-//wifi
-ESP8266WiFiMulti WiFiMulti;
+
 
 //屏幕大小 4.2寸 400x300
 #define SCREEN_WIDTH  400 //display.width()
@@ -53,12 +53,19 @@ ESP8266WiFiMulti WiFiMulti;
 #define MAX_TRY_COUNT 3
 
 //天气图表大小
-#define ICON_SIZE_WEATHER 45  //45x45
-#define ICON_SIZE_SMALL 13    //13x13
+#define ICON_SIZE_WEATHER 45    //45x45
+#define ICON_SIZE_SMALL   13    //13x13
 
+
+// EEPROM配置
+#define EEPROM_SIZE            256    // EEPROM大小
 // wifi
-const char *ssid     = "{ssid}";
-const char *password = "{password}";
+#define EEPROM_ADDR_SSID_LEN     0    // ssid 长度存储地址
+#define EEPROM_ADDR_SSID         1    // ssid 存储起始地址
+#define EEPROM_ADDR_PASSWD_LEN 128    // passwd 长度存储地址
+#define EEPROM_ADDR_PASSWD     129    // passwd 存储起始地址
+#define WIFI_CONFIG_MAX_LEN     64    // wifi配置最大长度
+#define WIFI_CONFIG_MAX_COUNT  180    // wifi配置最大长度
 
 // 日期
 const char url_Date[] PROGMEM = "https://api.heidai.space/date";
