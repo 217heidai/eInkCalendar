@@ -30,6 +30,9 @@
 2. `eInkCalendar.ino`中修改天气链接中 location 信息为当地城市名称拼音（首字母大写，如上海 `Shanghai`），设置 `url_Weather`;
 
 ## 更新日志
+### 0.0.6【2026/02/11】
+1. 支持 SmartConfig 配网。开机自动连接 WiFi，若失败则进入 SmartConfig 配网模式，展示二维码，等待微信扫码配网。
+
 ### 0.0.5【2024/06/11】
 1. 增加加密货币 BTC、ETH、BNB 金额显示。
 
