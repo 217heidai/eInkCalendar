@@ -75,6 +75,15 @@ static bool ParseWeather(String content, Weather *pstWeather)
 
 extern bool GetWeather(Weather *pstWeather)
 {
-  String payload = callHttps(url_Weather);
+  char url[256+1]={0};
+  char location[256+1]={0};
+
+  if(!GetLocation(location))
+  {
+    return false;
+  }
+
+  sprintf(url, "%s/?location=%s", url_Weather, location);
+  String payload = callHttps(url);
   return ParseWeather(payload, pstWeather);
 }

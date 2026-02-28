@@ -81,8 +81,11 @@ static bool smartConfig(uint8_t *pssid, uint8_t *ppasswd)
   isStart = WiFi.beginSmartConfig();
   if (isStart)
   {
+    display_smartConfig(); // 显示配网二维码
     Serial.println("SmartConfig已启动，等待配网数据...");
     Serial.println("配网超时时间: 3分钟");
+
+    led_controller(true); // 打开LED
     for (i = 0; i < WIFI_CONFIG_MAX_COUNT; i++)
     {
       delay(1000);
@@ -96,11 +99,9 @@ static bool smartConfig(uint8_t *pssid, uint8_t *ppasswd)
         
         // 保存配置
         len = strlen((const char*)pssid);
-        eeprom_write(&len, EEPROM_ADDR_SSID_LEN, 1);
-        eeprom_write(pssid, EEPROM_ADDR_SSID, len);
+        eeprom_write(EEPROM_ADDR_SSID, (uint8_t *)pssid, len);
         len = strlen((const char*)ppasswd);
-        eeprom_write(&len, EEPROM_ADDR_PASSWD_LEN, 1);
-        eeprom_write(ppasswd, EEPROM_ADDR_PASSWD, len);
+        eeprom_write(EEPROM_ADDR_PASSWD, (uint8_t *)ppasswd, len);
         EEPROM.commit();
         
         isSuccess = true;
@@ -114,20 +115,19 @@ static bool smartConfig(uint8_t *pssid, uint8_t *ppasswd)
       delay(500);
     }
 
-    if (isSuccess)
-    {
-      Serial.println("\n配网成功！");
-      Serial.printf("正在连接WiFi: %s\n", ssid);
-      Serial.print("连接中");
-    }
-    else
-    {
-      Serial.println("\n配网超时!");
-    }
+    led_controller(false); // 关闭LED
+  }
+
+  if (isSuccess)
+  {
+    Serial.println("\n配网成功！");
+    Serial.printf("正在连接WiFi: %s\n", ssid);
+    Serial.print("连接中");
   }
   else
   {
-    Serial.println("启动SmartConfig失败!");
+    display_smartConfig_fail(); // 显示配网失败
+    Serial.println("SmartConfig配置失败");
   }
 
   return isSuccess;
@@ -137,36 +137,30 @@ extern bool connectToWifi(void)
 {
   uint8_t len_ssid = 0;
   uint8_t len_passwd = 0;
-  uint8_t ssid[WIFI_CONFIG_MAX_LEN + 1] = {0};
-  uint8_t passwd[WIFI_CONFIG_MAX_LEN + 1] = {0};
+  uint8_t ssid[255 + 1];
+  uint8_t passwd[255 + 1];
   uint8_t i = 0;
   bool isSuccess = true; //可能不需要配网，所以默认成功
 
-  EEPROM.begin(EEPROM_SIZE);
-
 RETRY_CONNECT:
   // 读取EEPROM中的SSID和密码
-  eeprom_read(&len_ssid, EEPROM_ADDR_SSID_LEN, 1);
-  eeprom_read(&len_passwd, EEPROM_ADDR_PASSWD_LEN, 1);
+  memset(ssid, 0, sizeof(ssid));
+  memset(passwd, 0, sizeof(passwd));
+  len_ssid = eeprom_read(EEPROM_ADDR_SSID, ssid);
+  len_passwd = eeprom_read(EEPROM_ADDR_PASSWD, passwd);
   //len_ssid = 0; // for test
   if ((len_ssid < 1) || (len_ssid > WIFI_CONFIG_MAX_LEN) || (len_passwd < 1) || (len_passwd > WIFI_CONFIG_MAX_LEN)) //配网
   {
-    display_smartConfig();
-    led_controller(1); // 放在 display  前会导致Busy Timeout不显示，原因不明
-    isSuccess = smartConfig(ssid, passwd);
-    led_controller(0);
+    // 如重新配网，则清空location，重新进行IP定位
+    eeprom_clear(EEPROM_ADDR_LOCATION);
 
-    if (!isSuccess)
+    if (!smartConfig(ssid, passwd))
     {
-      EEPROM.end();
-      display_smartConfig_fail();
       return false;
     }
   }
   else
   {
-    eeprom_read(ssid, EEPROM_ADDR_SSID, len_ssid);
-    eeprom_read(passwd, EEPROM_ADDR_PASSWD, len_passwd);
     Serial.printf("\n正在连接WiFi: %s\n", ssid);
     Serial.print("连接中");
     WiFi.begin((const char *)ssid, (const char *)passwd);
@@ -180,7 +174,6 @@ RETRY_CONNECT:
       Serial.println("\nWiFi连接成功！");
       Serial.print("IP地址: ");
       Serial.println(WiFi.localIP());
-      EEPROM.end();
       return true;
     }
   }

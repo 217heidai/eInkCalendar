@@ -40,7 +40,7 @@ extern void esp_sleep(uint32_t minutes)
   ESP.deepSleep(minutes * 60 * 1000000, WAKE_NO_RFCAL);  //WAKE_RF_DEFAULT  WAKE_RFCAL  WAKE_NO_RFCAL  WAKE_RF_DISABLED
 }
 
-//led控制
+//led控制，放在 display 前会导致Busy Timeout不显示，原因不明
 extern void led_controller(bool controller)
 { 
   if (controller)
@@ -92,25 +92,45 @@ extern float bat_get_percentage(void)
   return percentage;
 }
 
-//读取EEPROM中的配置
-extern void eeprom_read(uint8_t * p, uint16_t addr, uint8_t len)
+
+// 读取 EEPROM 中的配置
+// EEPROM 储存格式为1字节长度+内容
+extern uint8_t eeprom_read(uint16_t addr, uint8_t *p)
 {
-  uint8_t i;
+  uint16_t i;
+  uint8_t len;
+
+  len = EEPROM.read(addr);
 
   for (i = 0; i < len; i++)
   {
-    *(p + i) = EEPROM.read(addr + i);
+    *(p + i) = EEPROM.read(addr + 1 + i);
   }
+
+  return len;
 }
 
-//写入EEPROM中的配置
-extern void eeprom_write(uint8_t * p, uint16_t addr, uint8_t len)
+//写入 EEPROM 中的配置
+// EEPROM 储存格式为1字节长度+内容
+extern uint8_t eeprom_write(uint16_t addr, uint8_t * p, uint8_t len)
 {
-  uint8_t i;
+  uint16_t i;
+
+  EEPROM.write(addr, len);
 
   for (i = 0; i < len; i++)
   {
-    EEPROM.write(addr + i, *(p + i));
+    EEPROM.write(addr + 1 + i, *(p + i));
   }
 
+  return len;
+}
+
+// 清空 EEPROM 中的配置
+// EEPROM 储存格式为1字节长度+内容
+extern void eeprom_clear(uint16_t addr)
+{
+  uint8_t len = 0;
+
+  EEPROM.write(addr, len);
 }

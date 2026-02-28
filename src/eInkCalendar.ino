@@ -58,19 +58,22 @@ U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
 
 
 // EEPROM配置
-#define EEPROM_SIZE            256    // EEPROM大小
+#define EEPROM_SIZE              512    // EEPROM大小
+#define EEPROM_ADDR_SSID           0    // ssid 存储起始地址
+#define EEPROM_ADDR_PASSWD       128    // passwd 存储起始地址
+#define EEPROM_ADDR_LOCATION     256    // location 存储地址
 // wifi
-#define EEPROM_ADDR_SSID_LEN     0    // ssid 长度存储地址
-#define EEPROM_ADDR_SSID         1    // ssid 存储起始地址
-#define EEPROM_ADDR_PASSWD_LEN 128    // passwd 长度存储地址
-#define EEPROM_ADDR_PASSWD     129    // passwd 存储起始地址
-#define WIFI_CONFIG_MAX_LEN     64    // wifi配置最大长度
-#define WIFI_CONFIG_MAX_COUNT  180    // wifi配置最大长度
+#define WIFI_CONFIG_MAX_LEN       64    // wifi 配置最大长度
+#define WIFI_CONFIG_MAX_COUNT    180    // wifi 尝试最大次数
+// location
+#define LOCATION_CONFIG_MAX_LEN  128    // location 配置最大长度
 
 // 日期
 const char url_Date[] PROGMEM = "https://api.heidai.space/date";
+// ip定位
+const char url_location[] PROGMEM = "https://ip.heidai.space";
 // 天气，修改location为所在城市拼音，首字母大写，可以用浏览器打开链接测试下
-const char url_Weather[] PROGMEM = "https://api.heidai.space/weather/?location=Shanghai";
+const char url_Weather[] PROGMEM = "https://api.heidai.space/weather";
 // 一言，max为返回句子的最大字数
 const char url_Hitokoto[] PROGMEM = "https://api.heidai.space/hitokoto/?max=28";
 // 加密货币
@@ -118,7 +121,7 @@ typedef struct _Date {
 
 //天气
 typedef struct _Weather {
-  char location[20];        //城市
+  char location[40];        //城市
   char text_day[20];        //白天天气现象名称
   char code_day[4];         //白天天气现象代码
   char text_night[20];      //晚上天气现象名称
@@ -153,6 +156,8 @@ const char DefaultHitokotoFrom[] PROGMEM = "Linus Torvalds";
 
 void setup()
 {
+  EEPROM.begin(EEPROM_SIZE);
+
   Serial.begin(115200);
 
   //一些初始化
@@ -168,14 +173,12 @@ void setup()
 
   if(!isNeedRefresh()) goto ESP_SLEEP;//检查是否需要刷新
 
-  //led_controller(1); //点亮led
-
   if(!connectToWifi()) goto ESP_SLEEP;//连接wifi
 
   display_MainPage(); //显示主页
 
 ESP_SLEEP:
-  //led_controller(0); //熄灭led
+  EEPROM.end();
   Serial.printf("剩余堆空间：%d\n", ESP.getFreeHeap());//查看堆空间
   esp_sleep(SLEEP_TIME); //休眠SLEEP_TIME后重启
 }

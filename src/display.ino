@@ -280,16 +280,15 @@ static bool RefreshWeather(void)
     display_icon_weather(x, y, stWeather.code_night);
   }
 
-  //设置正常字体
-  u8g2Fonts.setFont(chinese_city_gb2312);
   //天气
-  if(String(stWeather.text_day) == String(stWeather.text_night))
+  u8g2Fonts.setFont(chinese_city_gb2312);
+  if(!gisNight)
   {
-    sprintf(disp, "%s", stWeather.text_day);
+    sprintf(disp, "%s%s", stWeather.location, stWeather.text_day);
   }
   else
   {
-    sprintf(disp, "%s转%s", stWeather.text_day, stWeather.text_night);
+    sprintf(disp, "%s%s", stWeather.location, stWeather.text_night);
   }
   dataWidth = u8g2Fonts.getUTF8Width(disp);
   temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING;

@@ -6,12 +6,13 @@
 ![daily2](https://raw.githubusercontent.com/217heidai/eInkCalendar/main/doc/daily2.png)
 
 ## 功能
-1. 日历信息展示，包括日期、星期、农历、宜忌、节假日；
-2. 节假日信息展示，红色字体突出显示；
-3. 天气信息展示，包括天气、最低温度、最高温度、体感舒适度；
-4. “一言”信息展示；
-5. 为了省电，每次联网刷新后，深度休眠 XX 分钟（具体见代码中 `SLEEP_TIME` 定义）；
-6. 每 X 小时（具体见代码中 `REFRESH_FREQUENCY` 定义）联网刷新一次日期、天气信息。如日期发生变化，则强制刷新。
+1. 使用 SmartConfig 配网。开机自动连接 WiFi，若失败则进入 SmartConfig 配网，展示二维码，等待微信扫码配网；
+2. 使用 IP 定位获取天气。定位信息与 WiFi 信息同步更新。如触发 SmartConfig 配网，则同步进行 IP 定位；
+3. 每 1 小时（具体见代码中 `REFRESH_FREQUENCY` 定义）联网刷新，之后进入深度休眠；
+4. 日历信息展示，包括日期、星期、农历、宜忌、节假日；
+5. 天气信息展示，包括天气、最低温度、最高温度、体感舒适度；
+6. “一言”信息展示；
+7. 加密货币价格展示，包括 BTC、ETH、BNB、SOL 对应的 USDT 价格。
 
 ## 计划
 1. 翻页展示更多功能...
@@ -25,11 +26,11 @@
 2. U8g2_for_Adafruit_GFX，需要调整，具体见 lib 目录下源码（感谢`甘草酸不酸`大佬的源码）
 3. NTPClient
 4. ArduinoJson
-### 配置修改
-1. `eInkCalendar.ino`中修改 WiFi 信息，设置 `ssid`、`password`;
-2. `eInkCalendar.ino`中修改天气链接中 location 信息为当地城市名称拼音（首字母大写，如上海 `Shanghai`），设置 `url_Weather`;
 
 ## 更新日志
+### 0.0.7【2026/02/28】
+1. 支持 IP 定位获取天气。定位信息与 WiFi 信息同步更新，如触发 SmartConfig 配网，则同步进行 IP 定位。
+
 ### 0.0.6【2026/02/11】
 1. 支持 SmartConfig 配网。开机自动连接 WiFi，若失败则进入 SmartConfig 配网模式，展示二维码，等待微信扫码配网。
 
@@ -51,4 +52,3 @@
 
 ### 0.0.1【2021/08/19】
 1. 初始版本。
-
