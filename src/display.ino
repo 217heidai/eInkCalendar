@@ -263,13 +263,6 @@ static bool RefreshWeather(void)
     return false;
   }
 
-  //设置为大字体
-  u8g2Fonts.setFont(u8g2_mfxinran_16_number);
-  //位置
-  sprintf(disp, "%s", stWeather.location);
-  dataWidth = u8g2Fonts.getUTF8Width(disp);
-  u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE, disp);
-
   //天气图标
   if(!gisNight)
   {
@@ -282,13 +275,13 @@ static bool RefreshWeather(void)
 
   //天气
   u8g2Fonts.setFont(chinese_city_gb2312);
-  if(!gisNight)
+  if (strcmp(stWeather.text_day, stWeather.text_night) != 0)
   {
-    sprintf(disp, "%s%s", stWeather.location, stWeather.text_day);
+    sprintf(disp, "%s转%s", stWeather.text_day, stWeather.text_night);
   }
   else
   {
-    sprintf(disp, "%s%s", stWeather.location, stWeather.text_night);
+    sprintf(disp, "%s", stWeather.text_day);
   }
   dataWidth = u8g2Fonts.getUTF8Width(disp);
   temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING;
@@ -317,10 +310,13 @@ static bool RefreshWeather(void)
   //sprintf(disp, "紫外线%s", stWeather.uvi);
   //u8g2Fonts.drawUTF8(x, temp_y, disp);
 
-  //穿衣指数
-  temp_y = (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING * 3; //y起始位置
-  sprintf(disp, "体感%s", stWeather.dressing);
-  u8g2Fonts.drawUTF8(x, temp_y, disp);
+  //定位
+  temp_y = (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING * 2; //y起始位置
+  display.fillCircle(x + 3, temp_y + 7, 3, 0);
+  display.drawFastVLine(x + 3, temp_y + 7 + 3, FONT_SIZE_CHINESE - 6, 0);
+  display.drawFastHLine(x + 1, temp_y + FONT_SIZE_CHINESE + 3, 5, 0);
+  sprintf(disp, "  %s", stWeather.location);
+  u8g2Fonts.drawUTF8(x, temp_y + FONT_SIZE_CHINESE_SPACING, disp);
 
   return true;
 }
@@ -330,7 +326,12 @@ static bool RefreshHitokoto(void)
   Hitokoto stHitokoto;
   uint16_t dataWidth;
   char disp[120];
-  int i = 0;
+  uint16_t dataWidth1;
+  char disp1[20] = "一言";
+  uint8_t i = 0;
+  uint16_t x = 0;
+  uint16_t y = 0;
+
 
   for (i=0; i<MAX_TRY_COUNT; i++)
   {
@@ -342,16 +343,9 @@ static bool RefreshHitokoto(void)
   }
   if (i >= MAX_TRY_COUNT)
   {
-    u8g2Fonts.setFont(chinese_city_gb2312);
-    dataWidth = u8g2Fonts.getUTF8Width(DefaultHitokoto);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), DefaultHitokoto);
-
-    dataWidth = u8g2Fonts.getUTF8Width(DefaultHitokotoFrom);
-    u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth - FONT_SIZE_CHINESE * 2, SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), DefaultHitokotoFrom);
+    strcpy(stHitokoto.hitokoto, DefaultHitokoto);
+    strcpy(stHitokoto.from,     DefaultHitokotoFrom);
   }
-
-  //画线
-  //display.fillRect(0, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 2 - 3, SCREEN_WIDTH, 2, COLOR_BLACK);
 
   u8g2Fonts.setFont(chinese_city_gb2312);
   //一言
@@ -363,12 +357,16 @@ static bool RefreshHitokoto(void)
   dataWidth = u8g2Fonts.getUTF8Width(disp);
   if (dataWidth <= SCREEN_WIDTH/2)
   {
-    u8g2Fonts.drawUTF8(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2 ), SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), disp);
+    x = SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2 );
   }
   else
   {
-    u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), disp);
+    x = SCREEN_WIDTH - dataWidth;
   }
+  y = SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE);
+  dataWidth1 = u8g2Fonts.getUTF8Width(disp1);
+  display.drawFastHLine(x - dataWidth1 - 2, y - FONT_SIZE_CHINESE / 2, dataWidth1, 0);
+  u8g2Fonts.drawUTF8(x, y, disp);
 
   return true;
 }
