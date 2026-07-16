@@ -83,7 +83,7 @@ extern bool GetWeather(Weather *pstWeather)
     return false;
   }
 
-  sprintf(url, "%s/?location=%s", url_Weather, location);
+  sprintf(url, "%s/?ip=%s", url_Weather, location);
   String payload = callHttps(url);
   return ParseWeather(payload, pstWeather);
 }

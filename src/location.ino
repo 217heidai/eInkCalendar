@@ -14,9 +14,9 @@ static bool ParseLocation(String content, char *pszLocation)
   serializeJsonPretty(json, Serial);
   Serial.println("");
 
-  if(!json["City"].isNull())
+  if(!json["IP"].isNull())
   {
-    strcpy(pszLocation, json["City"]);
+    strcpy(pszLocation, json["IP"]);
   }
   else
   {
