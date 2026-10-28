@@ -4,7 +4,7 @@ extern void display_test_str(void) //中文字体测试
   String str = "日值月破，大事不宜";
   const char* character = str.c_str(); 
 
-  u8g2Fonts.setFont(chinese_city_gb2312);
+  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
   dataWidth = u8g2Fonts.getUTF8Width(character);
   display.setPartialWindow(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH/2); //设置刷新区域
   display.firstPage();
@@ -182,7 +182,7 @@ extern void display_test_qrcode(void)
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, (SCREEN_HEIGTH - 200) / 2 - 2, disp);
 
     // 操作提示
-    u8g2Fonts.setFont(chinese_city_gb2312);
+    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
     sprintf(disp, "确保手机连接到2.4GHz WiFi");
     Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp);

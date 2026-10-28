@@ -117,7 +117,7 @@ static bool RefreshDate(void)
   }
 
   //设置为正常字体
-  u8g2Fonts.setFont(chinese_city_gb2312);
+  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
   //星期
   GetWeekday(disp, stDate.time.week);
   u8g2Fonts.drawUTF8(0, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING, disp);
@@ -170,7 +170,7 @@ static bool RefreshDate(void)
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2), SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2), disp);
     
-    u8g2Fonts.setFont(chinese_city_gb2312);
+    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
     if(strlen(stDate.yi))
     {
       sprintf(disp, "%s", stDate.yi);
@@ -274,7 +274,7 @@ static bool RefreshWeather(void)
   }
 
   //天气
-  u8g2Fonts.setFont(chinese_city_gb2312);
+  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
   if (strcmp(stWeather.text_day, stWeather.text_night) != 0)
   {
     sprintf(disp, "%s转%s", stWeather.text_day, stWeather.text_night);
@@ -347,7 +347,7 @@ static bool RefreshHitokoto(void)
     strcpy(stHitokoto.from,     DefaultHitokotoFrom);
   }
 
-  u8g2Fonts.setFont(chinese_city_gb2312);
+  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
   //一言
   sprintf(disp, "%s", stHitokoto.hitokoto);
   dataWidth = u8g2Fonts.getUTF8Width(disp);
@@ -393,7 +393,7 @@ static bool RefreshCoin(void)
     return true; // 加密货币价格获取失败不影响
   }
 
-  u8g2Fonts.setFont(chinese_city_gb2312);
+  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
   if (strlen(stCryptoCoin.price_btc))
   {
     //btc

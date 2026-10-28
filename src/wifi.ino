@@ -19,7 +19,7 @@ static void display_smartConfig(void)
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, (SCREEN_HEIGTH - 200) / 2 - 2, disp);
 
     // 操作提示
-    u8g2Fonts.setFont(chinese_city_gb2312);
+    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
     sprintf(disp, "确保手机连接到2.4GHz WiFi");
     Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
@@ -49,7 +49,7 @@ static void display_smartConfig_fail(void)
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH / 2, disp);
 
     // 操作提示
-    u8g2Fonts.setFont(chinese_city_gb2312);
+    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
     sprintf(disp, "确保手机连接到2.4GHz WiFi");
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH / 2 + FONT_SIZE_CHINESE_SPACING, disp);
