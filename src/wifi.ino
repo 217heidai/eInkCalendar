@@ -185,13 +185,14 @@ RETRY_CONNECT:
 extern String callHttps(const char *url)
 {
   String payload;
+  payload.reserve(512); //预分配，避免多次小块 realloc（大响应会按需扩展一次）
   std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
   HTTPClient https;
   int httpsCode;
 
   if (WiFi.status() != WL_CONNECTED)
   {
-    payload = "{\"status_code\":\"" + String("WIFI连接断开") + "\"}";  //将错误值转换成json格式
+    payload = F("{\"status_code\":\"WIFI连接断开\"}");  //将错误值转换成json格式
     goto END;
   }
 
@@ -217,19 +218,23 @@ extern String callHttps(const char *url)
       }
       else
       {
-        payload = "{\"status_code\":\"" + String("请求错误:") + String(httpsCode) + "\"}";  //将错误值转换成json格式
+        char ebuf[48];
+        snprintf(ebuf, sizeof(ebuf), "{\"status_code\":\"请求错误:%d\"}", httpsCode);
+        payload = ebuf;
         goto END;
       }
     }
     else
     {
-      payload = "{\"status_code\":\"" + String(https.errorToString(httpsCode).c_str()) + "\"}";  //将错误值转换成json格式
+      char ebuf[64];
+      snprintf(ebuf, sizeof(ebuf), "{\"status_code\":\"%s\"}", https.errorToString(httpsCode).c_str());
+      payload = ebuf;
       goto END;
     }
   }
   else
   {
-    payload = "{\"status_code\":\"" + String("无法连接服务器") + "\"}";  //将错误值转换成json格式
+    payload = F("{\"status_code\":\"无法连接服务器\"}");  //将错误值转换成json格式
     goto END;
   }
 

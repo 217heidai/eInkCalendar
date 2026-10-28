@@ -1,7 +1,7 @@
 //使用Json解析天气数据，今天和未来2天
 static bool ParseWeather(String content, Weather *pstWeather)
 {
-  DynamicJsonDocument json(2560); //分配内存,动态
+  StaticJsonDocument<1280> json; //静态分配，不占堆；12个单层键值字段，1280留余量
   //content.replace("\\", "");
   //Serial.println(content);
   //content = content.substring(1, content.length()-1);

@@ -1,7 +1,7 @@
 //使用Json解析一言
 static bool ParseHitokoto(String content, Hitokoto *pstHitokoto)
 {
-  DynamicJsonDocument json(1536); //分配内存,动态
+  StaticJsonDocument<256> json; //静态分配，不占堆；3个单层键值字段
   //content.replace("\\", "");
   //Serial.println(content);
   //content = content.substring(1, content.length()-1);

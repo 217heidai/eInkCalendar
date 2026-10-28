@@ -45,7 +45,7 @@ extern bool GetNTPTime(unsigned long *pEpochTime)
 //使用Json解析日期
 static bool ParseDate(String content, Date *pstDate)
 {
-  DynamicJsonDocument json(1536); //分配内存,动态
+  StaticJsonDocument<1024> json; //静态分配，不占堆；10个单层键值字段，1024足够
   DeserializationError error;
 
   pstDate->isWorkday = true; //默认为工作日
