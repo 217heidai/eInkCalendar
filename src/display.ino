@@ -14,6 +14,7 @@ extern void display_setup(void)
   //display_test_str();
   //display_test_battery();
   //display_test_qrcode();
+  //display_test_center();
   //esp_sleep(SLEEP_TIME);
 }
 
@@ -106,11 +107,11 @@ static bool RefreshDate(void)
     u8g2Fonts.setFont(u8g2_sarasa_16_gb2312);//设置为大字体
 
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 2 + 6, disp);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 2 + 6, disp);
     if (strlen(disp1))
     {
       dataWidth = u8g2Fonts.getUTF8Width(disp1);
-      u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 3 + 6, disp1);
+      drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_LARGE * 3 + 6, disp1);
     }
     
     SetForegroundColorBLACK(); //设置为黑色
@@ -156,7 +157,7 @@ static bool RefreshDate(void)
     SetForegroundColorRED(); //设置为红色
     sprintf(disp, "%s", stDate.yi);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8(SCREEN_WIDTH / 2 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_LARGE/2, disp);
+    drawUTF8Centered(SCREEN_WIDTH / 2 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_LARGE/2, disp);
     SetForegroundColorBLACK(); //设置为黑色
   }
   else
@@ -165,10 +166,10 @@ static bool RefreshDate(void)
     SetForegroundColorRED(); //设置为红色
     sprintf(disp, "%s", "宜");
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8(SCREEN_WIDTH / 4 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2), disp);
+    drawUTF8Centered(SCREEN_WIDTH / 4 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2), disp);
     sprintf(disp, "%s", "忌");
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2), SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2), disp);
+    drawUTF8Centered(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2), SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2), disp);
     
     u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
     if(strlen(stDate.yi))
