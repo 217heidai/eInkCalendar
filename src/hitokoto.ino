@@ -1,11 +1,12 @@
 //使用Json解析一言
-static bool ParseHitokoto(String content, Hitokoto *pstHitokoto)
+static bool ParseHitokoto(const String &content, Hitokoto *pstHitokoto)
 {
-  StaticJsonDocument<256> json; //静态分配，不占堆；3个单层键值字段
+  StaticJsonDocument<512> json; //栈上静态分配，留足中文 UTF-8 余量，不占堆
   //content.replace("\\", "");
   //Serial.println(content);
   //content = content.substring(1, content.length()-1);
-  DeserializationError error = deserializeJson(json, content); //解析json
+  //低堆/高碎片下传 const char* 走只读解析，避免 ArduinoJson 原地解析时分配失败
+  DeserializationError error = deserializeJson(json, content.c_str()); //解析json
   if (error)
   {
     Serial.print("一言加载json配置失败:");

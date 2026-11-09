@@ -16,18 +16,18 @@ static void display_smartConfig(void)
     sprintf(disp, "微信扫码配置网络");
     Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, (SCREEN_HEIGTH - 200) / 2 - 2, disp);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, (SCREEN_HEIGTH - 200) / 2 - 2, disp);
 
     // 操作提示
-    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
+    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
     sprintf(disp, "确保手机连接到2.4GHz WiFi");
     Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING, disp);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING, disp);
     sprintf(disp, "请在3分钟内完成网络配置");
     Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp); // 与第一行对齐
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING*2, disp);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING*2, disp);
   }
   while (display.nextPage());
 }
@@ -46,16 +46,16 @@ static void display_smartConfig_fail(void)
     u8g2Fonts.setFont(u8g2_sarasa_16_gb2312);
     sprintf(disp, "配网失败，请重启再试");
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH / 2, disp);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH / 2, disp);
 
     // 操作提示
-    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
+    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
     sprintf(disp, "确保手机连接到2.4GHz WiFi");
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH / 2 + FONT_SIZE_CHINESE_SPACING, disp);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH / 2 + FONT_SIZE_CHINESE_SPACING, disp);
     sprintf(disp, "请在3分钟内完成网络配置");
     dataWidth = u8g2Fonts.getUTF8Width(disp); // 与第一行对齐
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH / 2 + FONT_SIZE_CHINESE_SPACING*2, disp);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH / 2 + FONT_SIZE_CHINESE_SPACING*2, disp);
   }
   while (display.nextPage());
 }
@@ -182,13 +182,53 @@ RETRY_CONNECT:
   goto RETRY_CONNECT;
 }
 
+// ===== 第二步 A：同一 host 复用一条 TLS 连接 =====
+// 四个接口都在 api.heidai.space，用 keep-alive 把 4 次握手降为 1 次。
+// 惰性创建：避免在 setup 之前就常驻占用约 6KB 堆；深睡重启后自动回收。
+static BearSSL::WiFiClientSecure *g_tlsClient = nullptr;
+static HTTPClient *g_https = nullptr;
+static char g_sessionHost[64] = {0};
+static bool g_sessionReady = false;            //上次请求成功且连接可继续使用
+
+// URL 常量在 PROGMEM(flash)，标准 strstr/strlen 会做非对齐 32 位读触发 Exception(3)。
+// 逐字节复制到 RAM 后再处理；pgm_read_byte 对 RAM 与 flash 指针都安全。
+static void https_copy_url(const char *url, char *buf, size_t cap)
+{
+  size_t i = 0;
+  while (i + 1 < cap)
+  {
+    char c = (char)pgm_read_byte(url + i);
+    if (!c) break;
+    buf[i++] = c;
+  }
+  buf[i] = 0;
+}
+
+static void https_extract_host(const char *ramUrl, char *host, size_t cap)
+{
+  host[0] = 0;
+  const char *p = strstr(ramUrl, "://");
+  if (!p) return;
+  p += 3;
+  const char *q = strchr(p, '/');
+  size_t n = q ? (size_t)(q - p) : strlen(p);
+  if (n >= cap) n = cap - 1;
+  memcpy(host, p, n);
+  host[n] = 0;
+}
+// ===== 连接复用结束 =====
+
 extern String callHttps(const char *url)
 {
   String payload;
   payload.reserve(512); //预分配，避免多次小块 realloc（大响应会按需扩展一次）
-  std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
-  HTTPClient https;
   int httpsCode;
+  char host[64] = {0};             //本次请求的 host
+  char ramUrl[256] = {0};          //PROGMEM URL 的 RAM 副本
+  bool needReset = true;           //默认关闭会话；仅成功时保持连接
+
+  https_copy_url(url, ramUrl, sizeof(ramUrl));
+  https_extract_host(ramUrl, host, sizeof(host));
 
   if (WiFi.status() != WL_CONNECTED)
   {
@@ -196,24 +236,44 @@ extern String callHttps(const char *url)
     goto END;
   }
 
-  client->setInsecure(); //不检验证书
-  client->setBufferSizes(1024, 512); //缓存大小
-  client->setSSLVersion(BR_TLS12, BR_TLS12);
-  //client->setCiphersLessSecure();
-  https.setReuse(false); //是否keep-alive
-  https.setTimeout(20000); //超时时间20s
+  //惰性创建会话对象：首次请求时分配，之后一直复用
+  if (g_tlsClient == nullptr || g_https == nullptr)
+  {
+    g_tlsClient = new BearSSL::WiFiClientSecure();
+    g_https = new HTTPClient();
+    if (g_tlsClient == nullptr || g_https == nullptr)
+    {
+      payload = F("{\"status_code\":\"内存不足\"}");
+      return payload;
+    }
+  }
+
+  //首次、换 host、或上次失败：关闭旧会话并重新配置一次
+  if (!g_sessionReady || strcmp(host, g_sessionHost) != 0)
+  {
+    g_https->end();
+    g_tlsClient->stop();
+    g_tlsClient->setInsecure(); //不检验证书
+    g_tlsClient->setBufferSizes(1024, 512); //缓存大小
+    g_tlsClient->setSSLVersion(BR_TLS12, BR_TLS12);
+    g_https->setReuse(true);   //关键：keep-alive，同 host 复用一条 TLS 连接
+    g_https->setTimeout(20000); //超时时间20s
+    strcpy(g_sessionHost, host);
+    g_sessionReady = false;
+  }
 
   Serial.printf_P(PSTR("Before: free_heap %d, max_alloc_heap %d, heap_fragmentation  %d\n"), ESP.getFreeHeap(), ESP.getMaxFreeBlockSize(), ESP.getHeapFragmentation());
-  Serial.printf("[HTTPS] begin... url: %s\n", url);
-  if (https.begin(*client, String(url)))
+  Serial.printf("[HTTPS] begin... url: %s\n", ramUrl);
+  if (g_https->begin(*g_tlsClient, String(ramUrl)))
   {
-    httpsCode = https.GET();
+    httpsCode = g_https->GET();
     if (httpsCode > 0)  //判断有无返回值
     {
       Serial.printf("[HTTPS] GET... code: %d\n", httpsCode);
       if (httpsCode == HTTP_CODE_OK) //判断请求是正确
       {
-        payload = https.getString();
+        payload = g_https->getString();
+        needReset = false;           //保持连接给下一个接口
         goto END;
       }
       else
@@ -221,13 +281,14 @@ extern String callHttps(const char *url)
         char ebuf[48];
         snprintf(ebuf, sizeof(ebuf), "{\"status_code\":\"请求错误:%d\"}", httpsCode);
         payload = ebuf;
+        needReset = false;           //仅是 HTTP 层错误，连接仍可复用
         goto END;
       }
     }
     else
     {
       char ebuf[64];
-      snprintf(ebuf, sizeof(ebuf), "{\"status_code\":\"%s\"}", https.errorToString(httpsCode).c_str());
+      snprintf(ebuf, sizeof(ebuf), "{\"status_code\":\"%s\"}", g_https->errorToString(httpsCode).c_str());
       payload = ebuf;
       goto END;
     }
@@ -239,7 +300,16 @@ extern String callHttps(const char *url)
   }
 
 END:
-  https.end();
+  if (g_https != nullptr) g_https->end();   //keep-alive 时不会关闭底层连接
+  if (needReset)       //失败：彻底关闭，下次重试重新握手
+  {
+    if (g_tlsClient != nullptr) g_tlsClient->stop();
+    g_sessionReady = false;
+  }
+  else
+  {
+    g_sessionReady = true;
+  }
   Serial.println(payload);
   return payload;
 }

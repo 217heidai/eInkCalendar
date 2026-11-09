@@ -43,7 +43,7 @@ U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
 
 //字体大小
 #define FONT_SIZE_NUMBER 100                                           //数字字体大小，根据选择的字体大小设置
-#define FONT_SIZE_CHINESE 14                                           //u8g2_font_wqy14_t_gb2312a字体大小，根据选择的字体大小设置
+#define FONT_SIZE_CHINESE 14                                           //u8g2_font_wqy14_t_gb2312字体大小，根据选择的字体大小设置
 #define FONT_SIZE_CHINESE_SPACING (FONT_SIZE_CHINESE + 2)              //留2个像素的行间距
 #define FONT_SIZE_CHINESE_LARGE 21                                     //大字体大小，根据选择的字体大小设置
 #define FONT_SIZE_CHINESE_LARGE_SPACING (FONT_SIZE_CHINESE_LARGE + 3)  //留3个像素的行间距

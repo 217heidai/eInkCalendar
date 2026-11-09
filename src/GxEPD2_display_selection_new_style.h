@@ -130,7 +130,7 @@
 #include "GxEPD2_selection_check.h"
 
 #if defined (ESP8266)
-#define MAX_DISPLAY_BUFFER_SIZE (81920ul-34000ul-5000ul) // ~34000 base use, change 5000 to your application use
+#define MAX_DISPLAY_BUFFER_SIZE 15000ul // 分 2 页绘制，释放约 15KB 给堆，避免 TLS 握手时内存不足
 #if IS_GxEPD2_BW(GxEPD2_DISPLAY_CLASS)
 #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
 #elif IS_GxEPD2_3C(GxEPD2_DISPLAY_CLASS) || IS_GxEPD2_4C(GxEPD2_DISPLAY_CLASS)

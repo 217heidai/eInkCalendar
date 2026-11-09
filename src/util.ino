@@ -85,6 +85,10 @@ static int8_t utf8_dec_signed(u8g2_font_decode_t *f, uint8_t cnt)
 //  上下：字形视觉中心对齐字格中心（sarasa 字格高=ascent+descent=20，中心=基线上方6px）
 //  左右：字形水平中心对齐字格(advance)中心
 //非汉字/缺字形：与 drawUTF8 完全一致，无任何偏移
+//与 drawUTF8 完全同入参同语义：x=字符串起点、y=基线；仅汉字(U+4E00~U+9FFF)逐字居中，非汉字零偏移
+//步进口径：汉字=u8g2_DrawGlyph 返回值(advance)；非汉字=u8g2_GetGlyphWidth(advance)
+//两者都与库 drawUTF8 内部 drawGlyph 的步进完全一致（不能用 getUTF8Width：它有 issue#16 尾字修正，
+//会把单字符宽度换成"真实像素宽+x_offset"，导致字母/数字步进偏小、字符贴在一起）
 extern void drawUTF8Centered(int16_t x, int16_t y, const char *str)
 {
   const char *p = str;
@@ -120,12 +124,12 @@ extern void drawUTF8Centered(int16_t x, int16_t y, const char *str)
         continue;
       }
     }
-    //非汉字/缺字形：与 drawUTF8 完全一致
+    //非汉字/缺字形：绘制与 drawUTF8 一致，步进=advance（与库 drawUTF8 的 drawGlyph 同口径）
     char tmp[4];
     memcpy(tmp, p, len);
     tmp[len] = 0;
     u8g2Fonts.drawUTF8(x, y, tmp);
-    x += u8g2Fonts.getUTF8Width(tmp);
+    x += u8g2_GetGlyphWidth(&u8g2Fonts.u8g2, enc);
     p += len;
   }
 }

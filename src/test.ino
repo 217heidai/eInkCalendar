@@ -4,15 +4,15 @@ extern void display_test_str(void) //中文字体测试
   String str = "日值月破，大事不宜";
   const char* character = str.c_str(); 
 
-  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
+  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
   dataWidth = u8g2Fonts.getUTF8Width(character);
   display.setPartialWindow(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH/2); //设置刷新区域
   display.firstPage();
   do
   {
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING, character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING * 2, character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING * 3, character);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING, character);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING * 2, character);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, FONT_SIZE_CHINESE_SPACING * 3, character);
   }
   while (display.nextPage());
 
@@ -22,9 +22,9 @@ extern void display_test_str(void) //中文字体测试
   display.firstPage();
   do
   {
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING, character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING * 2, character);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING * 3, character);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING, character);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING * 2, character);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH/2 + FONT_SIZE_CHINESE_LARGE_SPACING * 3, character);
   }
   while (display.nextPage());
 
@@ -41,15 +41,15 @@ extern void display_test_number(void) //大数字测试
     uint8_t size = FONT_SIZE_NUMBER;
     u8g2Fonts.setFont(u8g2_mfxinran_92_number);
     dataWidth = u8g2Fonts.getUTF8Width("123");
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size, "123");
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, size, "123");
     Serial.printf("\ndataWidth: %d\n", dataWidth/3);
 
     dataWidth = u8g2Fonts.getUTF8Width("456");
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size*2, "456");
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, size*2, "456");
     Serial.printf("\ndataWidth: %d\n", dataWidth/3);
 
     dataWidth = u8g2Fonts.getUTF8Width("789");
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, size*3, "789");
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, size*3, "789");
     Serial.printf("\ndataWidth: %d\n", dataWidth/3);
   }
   while (display.nextPage());
@@ -226,18 +226,18 @@ extern void display_test_qrcode(void)
     sprintf(disp, "微信扫码配置网络");
     Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, (SCREEN_HEIGTH - 200) / 2 - 2, disp);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, (SCREEN_HEIGTH - 200) / 2 - 2, disp);
 
     // 操作提示
-    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
+    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
     sprintf(disp, "确保手机连接到2.4GHz WiFi");
     Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING, disp);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING, disp);
     sprintf(disp, "请在3分钟内完成网络配置");
     Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp); // 与第一行对齐
-    u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING*2, disp);
+    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING*2, disp);
   }
   while (display.nextPage());
 }

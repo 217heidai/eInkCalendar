@@ -18,6 +18,68 @@ extern void display_setup(void)
   //esp_sleep(SLEEP_TIME);
 }
 
+// ===== 数据缓存：网络请求整轮只做一次，分页绘制只读缓存 =====
+// MAX_DISPLAY_BUFFER_SIZE=15000 会把屏幕分成 2 页，若把网络请求留在
+// firstPage()/nextPage() 循环体内，每页都会重新请求 4 个接口。
+static Date       g_stDate;
+static Weather    g_stWeather;
+static Hitokoto   g_stHitokoto;
+static CryptoCoin g_stCoin;
+static bool       g_hasCoin = false;
+static uint8_t    g_battery = 0;
+
+static bool FetchAllData(void)
+{
+  int i;
+  bool ok;
+
+  //日期、天气为必需数据，取不到则整轮不刷新
+  ok = false;
+  for (i = 0; i < MAX_TRY_COUNT; i++)
+  {
+    memset(&g_stDate, 0, sizeof(g_stDate));
+    if (GetDate(&g_stDate)) { ok = true; break; }
+    delay(300); //失败退避：给服务器恢复/TCP清理留时间
+  }
+  if (!ok) return false;
+
+  ok = false;
+  for (i = 0; i < MAX_TRY_COUNT; i++)
+  {
+    memset(&g_stWeather, 0, sizeof(g_stWeather));
+    if (GetWeather(&g_stWeather)) { ok = true; break; }
+    delay(300);
+  }
+  if (!ok) return false;
+
+  //一言取不到用默认句兜底
+  ok = false;
+  for (i = 0; i < MAX_TRY_COUNT; i++)
+  {
+    memset(&g_stHitokoto, 0, sizeof(g_stHitokoto));
+    if (GetHitokoto(&g_stHitokoto)) { ok = true; break; }
+    delay(300);
+  }
+  if (!ok)
+  {
+    strcpy(g_stHitokoto.hitokoto, DefaultHitokoto);
+    strcpy(g_stHitokoto.from,     DefaultHitokotoFrom);
+  }
+
+  //币价取不到不影响其它内容
+  g_hasCoin = false;
+  for (i = 0; i < MAX_TRY_COUNT; i++)
+  {
+    memset(&g_stCoin, 0, sizeof(g_stCoin));
+    if (GetCoin(&g_stCoin)) { g_hasCoin = true; break; }
+    delay(300);
+  }
+
+  g_battery = bat_get_percentage();
+  return true;
+}
+// ===== 数据缓存结束 =====
+
 static void GetWeekday(char *pszWeekday, uint8_t nWeekday)
 {
   if( nWeekday > 6) return;
@@ -50,29 +112,15 @@ static void GetWeekday(char *pszWeekday, uint8_t nWeekday)
 
 static bool RefreshDate(void)
 {
-  Date stDate;
+  Date &stDate = g_stDate;   //取数已在 FetchAllData() 完成
   uint16_t dataWidth;
   char disp[100];
   char disp1[100];
-  int i=0;
-  
-  for (i=0; i<MAX_TRY_COUNT; i++)
-  {
-    memset(&stDate, 0, sizeof(stDate));
-    if(GetDate(&stDate))
-    {
-      break;
-    }
-  }
-  if (i >= MAX_TRY_COUNT)
-  {
-    return false;
-  }
 
   //年月日
   u8g2Fonts.setFont(u8g2_mfxinran_16_number);//设置为大字体
   sprintf(disp, "%d-%02d-%02d", stDate.time.year, stDate.time.month, stDate.time.day);
-  u8g2Fonts.drawUTF8(0, FONT_SIZE_CHINESE_LARGE, disp);
+  drawUTF8Centered(0, FONT_SIZE_CHINESE_LARGE, disp);
 
   //画线，年进度条
   display.fillRect(0, FONT_SIZE_CHINESE_LARGE + 4, SCREEN_WIDTH - stDate.time.percentage, 2, COLOR_RED);
@@ -118,20 +166,20 @@ static bool RefreshDate(void)
   }
 
   //设置为正常字体
-  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
+  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
   //星期
   GetWeekday(disp, stDate.time.week);
-  u8g2Fonts.drawUTF8(0, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING, disp);
+  drawUTF8Centered(0, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING, disp);
   //干支 生肖
   if(strlen(stDate.ganzhi))
   {
     sprintf(disp, "农历%s%s年", stDate.ganzhi, stDate.shengxiao);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING, disp);
+    drawUTF8Centered(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING, disp);
     //农历年月日
     sprintf(disp, "%s", stDate.convert);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING * 2, disp);
+    drawUTF8Centered(SCREEN_WIDTH - dataWidth, FONT_SIZE_CHINESE_LARGE + 4 + FONT_SIZE_CHINESE_SPACING * 2, disp);
   }
 
   //大数字日期
@@ -142,7 +190,7 @@ static bool RefreshDate(void)
   u8g2Fonts.setFont(u8g2_mfxinran_92_number);
   sprintf(disp, "%d", stDate.time.day);
   dataWidth = u8g2Fonts.getUTF8Width(disp);
-  u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + FONT_SIZE_NUMBER, disp);
+  drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + FONT_SIZE_NUMBER, disp);
   if (!stDate.isWorkday) //恢复为黑白色
   {
     SetForegroundColorBLACK(); //设置为黑色
@@ -157,7 +205,7 @@ static bool RefreshDate(void)
     SetForegroundColorRED(); //设置为红色
     sprintf(disp, "%s", stDate.yi);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    drawUTF8Centered(SCREEN_WIDTH / 2 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_LARGE/2, disp);
+    drawUTF8Centered(SCREEN_WIDTH / 2 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_LARGE/2 - 4, disp);
     SetForegroundColorBLACK(); //设置为黑色
   }
   else
@@ -166,23 +214,23 @@ static bool RefreshDate(void)
     SetForegroundColorRED(); //设置为红色
     sprintf(disp, "%s", "宜");
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    drawUTF8Centered(SCREEN_WIDTH / 4 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2), disp);
+    drawUTF8Centered(SCREEN_WIDTH / 4 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) - 4, disp);
     sprintf(disp, "%s", "忌");
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    drawUTF8Centered(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2), SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2), disp);
+    drawUTF8Centered(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2), SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) - 3, disp); //使用-3而不是-4,调整视觉差异
     
-    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
+    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
     if(strlen(stDate.yi))
     {
       sprintf(disp, "%s", stDate.yi);
       dataWidth = u8g2Fonts.getUTF8Width(disp);
-      u8g2Fonts.drawUTF8(SCREEN_WIDTH / 4 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_SPACING, disp);
+      drawUTF8Centered(SCREEN_WIDTH / 4 - dataWidth / 2, SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_SPACING, disp);
     }
     if(strlen(stDate.ji))
     {
       sprintf(disp, "%s", stDate.ji);
       dataWidth = u8g2Fonts.getUTF8Width(disp);
-      u8g2Fonts.drawUTF8(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2), SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_SPACING, disp);
+      drawUTF8Centered(SCREEN_WIDTH - (SCREEN_WIDTH / 4 + dataWidth / 2), SCREEN_HEIGTH - ((SCREEN_HEIGTH / 2 - FONT_SIZE_NUMBER / 2 - FONT_SIZE_CHINESE_SPACING * 2)/2 + FONT_SIZE_CHINESE_SPACING * 2) + FONT_SIZE_CHINESE_SPACING, disp);
     }
     SetForegroundColorBLACK(); //设置为黑色
   }
@@ -242,27 +290,13 @@ static void display_icon_weather(uint16_t x, uint16_t y, char *weatherCode) //�
 
 static bool RefreshWeather(void)
 {
-  Weather stWeather;
+  Weather &stWeather = g_stWeather;   //取数已在 FetchAllData() 完成
   uint16_t dataWidth;
   char disp[120];
   uint16_t x = 300; //x起始位置
   uint16_t y = (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2; //y起始位置
   uint16_t temp_x, temp_y;
   uint16_t circle_x;
-  int i = 0;
-
-  for (i=0; i<MAX_TRY_COUNT; i++)
-  {
-    memset(&stWeather, 0, sizeof(stWeather));
-    if(GetWeather(&stWeather))
-    {
-      break;
-    }
-  }
-  if (i >= MAX_TRY_COUNT)
-  {
-    return false;
-  }
 
   //天气图标
   if(!gisNight)
@@ -275,7 +309,7 @@ static bool RefreshWeather(void)
   }
 
   //天气
-  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
+  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
   if (strcmp(stWeather.text_day, stWeather.text_night) != 0)
   {
     sprintf(disp, "%s转%s", stWeather.text_day, stWeather.text_night);
@@ -286,30 +320,26 @@ static bool RefreshWeather(void)
   }
   dataWidth = u8g2Fonts.getUTF8Width(disp);
   temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING;
-  u8g2Fonts.drawUTF8(x, temp_y, disp);
+  drawUTF8Centered(x, temp_y, disp);
 
   //最低温度
   sprintf(disp, "%s", stWeather.low);
   dataWidth = u8g2Fonts.getUTF8Width(disp);
   temp_y = y + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING*2;
-  u8g2Fonts.drawUTF8(x, temp_y, disp);
+  drawUTF8Centered(x, temp_y, disp);
   temp_x = x + dataWidth;
   //画圆圈
   circle_x = temp_x + 3; //计算圈圈的位置
   display.drawCircle(circle_x, temp_y - FONT_SIZE_CHINESE_SPACING + 5, 2, 0);
   //最高温度
+  temp_x = temp_x + 1;
   sprintf(disp, " ~ %s", stWeather.high);
   dataWidth = u8g2Fonts.getUTF8Width(disp);
-  u8g2Fonts.drawUTF8(temp_x, temp_y, disp);
+  drawUTF8Centered(temp_x, temp_y, disp);
   temp_x = temp_x + dataWidth;
   //画圆圈
   circle_x = temp_x + 3; //计算圈圈的位置
   display.drawCircle(circle_x, temp_y - FONT_SIZE_CHINESE_SPACING + 5, 2, 0);
-
-  //紫外线指数
-  //temp_y = (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING * 3; //y起始位置
-  //sprintf(disp, "紫外线%s", stWeather.uvi);
-  //u8g2Fonts.drawUTF8(x, temp_y, disp);
 
   //定位
   temp_y = (SCREEN_HEIGTH - FONT_SIZE_NUMBER)/2 + ICON_SIZE_WEATHER + FONT_SIZE_CHINESE_SPACING * 2; //y起始位置
@@ -317,42 +347,26 @@ static bool RefreshWeather(void)
   display.drawFastVLine(x + 3, temp_y + 7 + 3, FONT_SIZE_CHINESE - 6, 0);
   display.drawFastHLine(x + 1, temp_y + FONT_SIZE_CHINESE + 3, 5, 0);
   sprintf(disp, "  %s", stWeather.location);
-  u8g2Fonts.drawUTF8(x, temp_y + FONT_SIZE_CHINESE_SPACING, disp);
+  drawUTF8Centered(x, temp_y + FONT_SIZE_CHINESE_SPACING + 2, disp);
 
   return true;
 }
 
 static bool RefreshHitokoto(void)
 {
-  Hitokoto stHitokoto;
+  Hitokoto &stHitokoto = g_stHitokoto;   //取数已在 FetchAllData() 完成
   uint16_t dataWidth;
   char disp[120];
   uint16_t dataWidth1;
   char disp1[20] = "一言";
-  uint8_t i = 0;
   uint16_t x = 0;
   uint16_t y = 0;
 
-
-  for (i=0; i<MAX_TRY_COUNT; i++)
-  {
-    memset(&stHitokoto, 0, sizeof(stHitokoto));
-    if(GetHitokoto(&stHitokoto))
-    {
-      break;
-    }
-  }
-  if (i >= MAX_TRY_COUNT)
-  {
-    strcpy(stHitokoto.hitokoto, DefaultHitokoto);
-    strcpy(stHitokoto.from,     DefaultHitokotoFrom);
-  }
-
-  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
+  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
   //一言
   sprintf(disp, "%s", stHitokoto.hitokoto);
   dataWidth = u8g2Fonts.getUTF8Width(disp);
-  u8g2Fonts.drawUTF8((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), disp);
+  drawUTF8Centered((SCREEN_WIDTH - dataWidth)/2, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE), disp);
   //一言出处
   sprintf(disp, "%s", stHitokoto.from);
   dataWidth = u8g2Fonts.getUTF8Width(disp);
@@ -367,60 +381,48 @@ static bool RefreshHitokoto(void)
   y = SCREEN_HEIGTH - (FONT_SIZE_CHINESE_SPACING - FONT_SIZE_CHINESE);
   dataWidth1 = u8g2Fonts.getUTF8Width(disp1);
   display.drawFastHLine(x - dataWidth1 - 2, y - FONT_SIZE_CHINESE / 2, dataWidth1, 0);
-  u8g2Fonts.drawUTF8(x, y, disp);
+  drawUTF8Centered(x, y, disp);
 
   return true;
 }
 
 static bool RefreshCoin(void)
 {
-  CryptoCoin stCryptoCoin;
+  CryptoCoin &stCryptoCoin = g_stCoin;   //取数已在 FetchAllData() 完成
   uint16_t dataWidth;
   uint16_t start_x = 1;
   uint16_t start_y = (SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 8)/2; //y起始位置
   char disp[120];
-  int i = 0;
 
-  for (i=0; i<MAX_TRY_COUNT; i++)
-  {
-    memset(&stCryptoCoin, 0, sizeof(stCryptoCoin));
-    if(GetCoin(&stCryptoCoin))
-    {
-      break;
-    }
-  }
-  if (i >= MAX_TRY_COUNT)
-  {
-    return true; // 加密货币价格获取失败不影响
-  }
+  if (!g_hasCoin) return true; // 加密货币价格获取失败不影响
 
-  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312a);
+  u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
   if (strlen(stCryptoCoin.price_btc))
   {
     //btc
     sprintf(disp, "BTC");
-    u8g2Fonts.drawUTF8(start_x, start_y + FONT_SIZE_CHINESE_SPACING*1, disp);
+    drawUTF8Centered(start_x, start_y + FONT_SIZE_CHINESE_SPACING*1, disp);
     sprintf(disp, "%s", stCryptoCoin.price_btc);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
-    u8g2Fonts.drawUTF8(start_x, start_y + FONT_SIZE_CHINESE_SPACING*2, disp);
+    drawUTF8Centered(start_x, start_y + FONT_SIZE_CHINESE_SPACING*2, disp);
 
     //eth
     sprintf(disp, "ETH");
-    u8g2Fonts.drawUTF8(start_x, start_y + FONT_SIZE_CHINESE_SPACING*3, disp);
+    drawUTF8Centered(start_x, start_y + FONT_SIZE_CHINESE_SPACING*3, disp);
     sprintf(disp, "%s", stCryptoCoin.price_eth);
-    u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), start_y + FONT_SIZE_CHINESE_SPACING*4, disp);
+    drawUTF8Centered(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), start_y + FONT_SIZE_CHINESE_SPACING*4, disp);
 
     //BNB
     sprintf(disp, "BNB");
-    u8g2Fonts.drawUTF8(start_x, start_y + FONT_SIZE_CHINESE_SPACING*5, disp);
+    drawUTF8Centered(start_x, start_y + FONT_SIZE_CHINESE_SPACING*5, disp);
     sprintf(disp, "%s", stCryptoCoin.price_bnb);
-    u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), start_y + FONT_SIZE_CHINESE_SPACING*6, disp);
+    drawUTF8Centered(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), start_y + FONT_SIZE_CHINESE_SPACING*6, disp);
 
     //SOL
     sprintf(disp, "SOL");
-    u8g2Fonts.drawUTF8(start_x, start_y + FONT_SIZE_CHINESE_SPACING*7, disp);
+    drawUTF8Centered(start_x, start_y + FONT_SIZE_CHINESE_SPACING*7, disp);
     sprintf(disp, "%s", stCryptoCoin.price_sol);
-    u8g2Fonts.drawUTF8(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), start_y + FONT_SIZE_CHINESE_SPACING*8, disp);
+    drawUTF8Centered(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), start_y + FONT_SIZE_CHINESE_SPACING*8, disp);
   }
 
   return true;
@@ -430,7 +432,7 @@ static bool RefreshCoin(void)
 static bool RefreshBattery(void)
 {
   //电量百分比
-  uint8_t percentage = bat_get_percentage();
+  uint8_t percentage = g_battery;   //取数已在 FetchAllData() 完成
   
   //电量图标
   int16_t head_width  = 3;
@@ -466,6 +468,8 @@ extern void display_MainPage(void)
 {
   unsigned long ulEpochTime;
   Time stTime;
+
+  if (!FetchAllData()) return;  //网络阶段：整轮只取一次数据，分页循环内不再请求
 
   display.setPartialWindow(0, 0, SCREEN_WIDTH, SCREEN_HEIGTH); //设置全局刷新
   display.firstPage();

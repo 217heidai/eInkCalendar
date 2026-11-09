@@ -24,7 +24,7 @@ extern bool GetNTPTime(unsigned long *pEpochTime)
     else if (update_count > 4) timeClient.setPoolServerName("s1a.time.edu.cn");
     else if (update_count > 3) timeClient.setPoolServerName("s1b.time.edu.cn");
     else if (update_count > 2) timeClient.setPoolServerName("ntp4.aliyun.com");
-    else if (update_count > 1) timeClient.setPoolServerName("ntp3.aliyun.coms");
+    else if (update_count > 1) timeClient.setPoolServerName("ntp3.aliyun.com");
     else if (update_count > 0) timeClient.setPoolServerName("ntp2.aliyun.com");
   }
 

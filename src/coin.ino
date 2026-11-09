@@ -1,11 +1,11 @@
 //使用Json解析加密货币
-static bool ParseCoin(String content, CryptoCoin *pstCryptoCoin)
+static bool ParseCoin(const String &content, CryptoCoin *pstCryptoCoin)
 {
-  StaticJsonDocument<256> json; //静态分配，不占堆；4个单层键值字段
+  StaticJsonDocument<512> json; //栈上静态分配，不占堆
   //content.replace("\\", "");
   //Serial.println(content);
   //content = content.substring(1, content.length()-1);
-  DeserializationError error = deserializeJson(json, content); //解析json
+  DeserializationError error = deserializeJson(json, content.c_str()); //只读解析，低堆下更稳
   if (error)
   {
     Serial.print("加密货币加载json配置失败:");
@@ -15,6 +15,12 @@ static bool ParseCoin(String content, CryptoCoin *pstCryptoCoin)
   serializeJsonPretty(json, Serial);
   Serial.println("");
 
+  if (json["BTC"].isNull())  //无价格数据
+  {
+    json.clear();
+    Serial.println("加密货币加载json配置失败");
+    return false;
+  }
   if(!json["BTC"].isNull())
   {
     strcpy(pstCryptoCoin->price_btc, json["BTC"]);
