@@ -159,6 +159,15 @@ void setup()
 
   Serial.begin(115200);
 
+  //上按键（GPIO5）：按住上键再按下键复位，开机强制重新配网
+  //ESP8266 深睡只能由定时器/RST 唤醒，GPIO5 唤醒不了，所以只能在开机这一刻读
+  //默认按键按下为低电平（接 GND，用内部上拉）；消抖后读一次并锁存
+  pinMode(KEY_UP, INPUT_PULLUP);
+  delay(50);
+  int keyUpState = digitalRead(KEY_UP);
+  bool forceSmartConfig = (keyUpState == LOW);
+  Serial.printf("上按键状态: %d (LOW=按下，强制重新配网)\n", keyUpState);
+
   //一些初始化
   display.init();
   ESP.wdtEnable(60000);  //使能软件看门狗的触发间隔
@@ -170,8 +179,15 @@ void setup()
 
   Serial.printf("剩余堆空间：%d\n", ESP.getFreeHeap());  //查看堆空间
 
-  if(!isNeedRefresh()) goto ESP_SLEEP;//检查是否需要刷新
+  if(!forceSmartConfig && !isNeedRefresh()) goto ESP_SLEEP;//检查是否需要刷新（上键强制配网时跳过该检查）
 
+  if (forceSmartConfig) //强制重新配网：清掉已存 WiFi，connectToWifi 会走 SmartConfig，定位也会随之重取
+  {
+    Serial.println("强制重新配网：清除已存 WiFi 配置");
+    eeprom_clear(EEPROM_ADDR_SSID);
+    eeprom_clear(EEPROM_ADDR_PASSWD);
+    EEPROM.commit();
+  }
   if(!connectToWifi()) goto ESP_SLEEP;//连接wifi
 
   display_MainPage(); //显示主页
