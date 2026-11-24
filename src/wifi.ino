@@ -3,6 +3,11 @@ extern void display_smartConfig(void)
   char disp[256];
   uint16 dataWidth = 0;
 
+  // 串口提示只打印一次：原来在翻页循环内，屏幕分 2 页刷新时会重复打印
+  Serial.println("微信扫码配置网络");
+  Serial.println("确保手机连接到2.4GHz WiFi");
+  Serial.println("请在3分钟内完成网络配置");
+
   display.firstPage();
   do
   {
@@ -14,18 +19,15 @@ extern void display_smartConfig(void)
     // 标题
     u8g2Fonts.setFont(u8g2_sarasa_16_gb2312);
     sprintf(disp, "微信扫码配置网络");
-    Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, (SCREEN_HEIGTH - 200) / 2 - 2, disp);
 
     // 操作提示
     u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
     sprintf(disp, "确保手机连接到2.4GHz WiFi");
-    Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp);
     drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING, disp);
     sprintf(disp, "请在3分钟内完成网络配置");
-    Serial.println(disp);
     dataWidth = u8g2Fonts.getUTF8Width(disp); // 与第一行对齐
     drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING*2, disp);
   }
