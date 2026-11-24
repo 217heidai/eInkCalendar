@@ -18,11 +18,11 @@ static bool ParseHitokoto(const String &content, Hitokoto *pstHitokoto)
 
   if(!json["hitokoto"].isNull())
   {
-    strcpy(pstHitokoto->hitokoto, json["hitokoto"]);
+    strcpy_safe(pstHitokoto->hitokoto, sizeof(pstHitokoto->hitokoto), json["hitokoto"]);
   }
   else if(!json["poetry"].isNull())
   {
-    strcpy(pstHitokoto->hitokoto, json["poetry"]);
+    strcpy_safe(pstHitokoto->hitokoto, sizeof(pstHitokoto->hitokoto), json["poetry"]);
   }
   else
   {
@@ -33,7 +33,7 @@ static bool ParseHitokoto(const String &content, Hitokoto *pstHitokoto)
 
   if(!json["from"].isNull())
   {
-    strcpy(pstHitokoto->from, json["from"]);
+    strcpy_safe(pstHitokoto->from, sizeof(pstHitokoto->from), json["from"]);
   }
   else
   {

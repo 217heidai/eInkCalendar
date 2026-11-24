@@ -1,4 +1,4 @@
-static void display_smartConfig(void)
+extern void display_smartConfig(void)
 {
   char disp[256];
   uint16 dataWidth = 0;
@@ -140,6 +140,7 @@ extern bool connectToWifi(void)
   uint8_t ssid[255 + 1];
   uint8_t passwd[255 + 1];
   uint8_t i = 0;
+  uint8_t retry_round = 0;
   bool isSuccess = true; //可能不需要配网，所以默认成功
 
 RETRY_CONNECT:
@@ -179,6 +180,13 @@ RETRY_CONNECT:
   }
 
   ESP.wdtFeed();//喂狗
+  if (++retry_round >= 3) //3 轮（约 4.5 分钟）都连不上：大概率是密码错了，清掉配置回休眠，下次唤醒重新配网，不再空转耗电
+  {
+    eeprom_clear(EEPROM_ADDR_SSID);
+    eeprom_clear(EEPROM_ADDR_PASSWD);
+    EEPROM.commit();
+    return false;
+  }
   goto RETRY_CONNECT;
 }
 

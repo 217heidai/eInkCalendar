@@ -3,18 +3,32 @@
 #define SECOND_HOUR   (3600)    //60*60
 #define SECOND_MIN    (60)      //60
 
+static unsigned long g_ulEpochTimeLast = 0; //本轮 GetDate 取到的 NTP 时间，供 display_MainPage 写 RTC 复用
+
+//返回本轮已取到的 NTP 时间；未取到返回 0
+extern unsigned long GetLastEpochTime(void)
+{
+  return g_ulEpochTimeLast;
+}
+
 //获取NTP时间
 extern bool GetNTPTime(unsigned long *pEpochTime)
 {
   uint8_t update_count = 0;
   uint8_t hour;
+  bool ok = false;
 
   WiFiUDP ntpUDP;
   NTPClient timeClient(ntpUDP, "ntp.ntsc.ac.cn", 8 * 3600, 10); //udp，服务器地址，时间偏移量，更新间隔
 
   timeClient.begin();
-  while (timeClient.forceUpdate() == 0 && update_count < 10)
+  while (update_count < 10)
   {
+    if (timeClient.forceUpdate())
+    {
+      ok = true;
+      break;
+    }
     update_count++;
     delay(100);
     if (update_count > 8) timeClient.setPoolServerName("s2k.time.edu.cn");
@@ -26,6 +40,11 @@ extern bool GetNTPTime(unsigned long *pEpochTime)
     else if (update_count > 2) timeClient.setPoolServerName("ntp4.aliyun.com");
     else if (update_count > 1) timeClient.setPoolServerName("ntp3.aliyun.com");
     else if (update_count > 0) timeClient.setPoolServerName("ntp2.aliyun.com");
+  }
+  if (!ok) //10 个服务器都失败：不返回错误时间，由调用方按取数失败处理
+  {
+    timeClient.end();
+    return false;
   }
 
   *pEpochTime = timeClient.getEpochTime();
@@ -77,39 +96,39 @@ static bool ParseDate(String content, Date *pstDate)
   }
   if(!json["holiday"].isNull()) //节日信息
   {
-    strcpy(pstDate->holiday, json["holiday"]);
+    strcpy_safe(pstDate->holiday, sizeof(pstDate->holiday), json["holiday"]);
   }
   if(!json["lunar_month"].isNull()) //农历月
   {
-    strcpy(pstDate->convert, json["lunar_month"]);
+    strcpy_safe(pstDate->convert, sizeof(pstDate->convert), json["lunar_month"]);
   }
   if(!json["lunar_day"].isNull()) //农历日
   {
-    strcpy(pstDate->convert+strlen(pstDate->convert), json["lunar_day"]);
+    strcpy_safe(pstDate->convert + strlen(pstDate->convert), sizeof(pstDate->convert) - strlen(pstDate->convert), json["lunar_day"]);
   }
   if(!json["ganzhi_year"].isNull())//(干支)年柱
   {
-    strcpy(pstDate->ganzhi, json["ganzhi_year"]);
+    strcpy_safe(pstDate->ganzhi, sizeof(pstDate->ganzhi), json["ganzhi_year"]);
   }
   if(!json["animal"].isNull())//生肖
   {
-    strcpy(pstDate->shengxiao, json["animal"]);
+    strcpy_safe(pstDate->shengxiao, sizeof(pstDate->shengxiao), json["animal"]);
   }
   if(!json["term"].isNull())//节气
   {
-    strcpy(pstDate->term, json["term"]);
+    strcpy_safe(pstDate->term, sizeof(pstDate->term), json["term"]);
   }
   if(!json["yi"].isNull())//宜
   {
-    strcpy(pstDate->yi, json["yi"]);
+    strcpy_safe(pstDate->yi, sizeof(pstDate->yi), json["yi"]);
   }
   if(!json["ji"].isNull())//忌
   {
-    strcpy(pstDate->ji, json["ji"]);
+    strcpy_safe(pstDate->ji, sizeof(pstDate->ji), json["ji"]);
   }
   if(!json["lunar_festival"].isNull())//农历节日
   {
-    strcpy(pstDate->lunar_festival, json["lunar_festival"]);
+    strcpy_safe(pstDate->lunar_festival, sizeof(pstDate->lunar_festival), json["lunar_festival"]);
   }
   json.clear();
   return true;
@@ -166,13 +185,14 @@ extern bool GetDate(Date *pstDate)
 {
   unsigned long ulEpochTime;
   String dateInfo;
-  bool Result;
 
-  //获取NTP时间
-  if(GetNTPTime(&ulEpochTime))
+  //获取NTP时间：失败则整轮放弃，不用错误时间画屏、不写脏 RTC
+  if(!GetNTPTime(&ulEpochTime))
   {
-    GetTime(ulEpochTime, &(pstDate->time));
+    return false;
   }
+  g_ulEpochTimeLast = ulEpochTime; //供 display_MainPage 复用，本轮不再单独查 NTP
+  GetTime(ulEpochTime, &(pstDate->time));
   Serial.printf("NTP Time: %04d/%02d/%02d %02d:%02d:%02d\n", pstDate->time.year, pstDate->time.month, pstDate->time.day, pstDate->time.hour, pstDate->time.minute, pstDate->time.second);
 
   //更新RTC时间

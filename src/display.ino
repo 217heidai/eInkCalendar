@@ -62,8 +62,8 @@ static bool FetchAllData(void)
   }
   if (!ok)
   {
-    strcpy(g_stHitokoto.hitokoto, DefaultHitokoto);
-    strcpy(g_stHitokoto.from,     DefaultHitokotoFrom);
+    strcpy_safe(g_stHitokoto.hitokoto, sizeof(g_stHitokoto.hitokoto), DefaultHitokoto);
+    strcpy_safe(g_stHitokoto.from,     sizeof(g_stHitokoto.from), DefaultHitokotoFrom);
   }
 
   //币价取不到不影响其它内容
@@ -110,7 +110,7 @@ static void GetWeekday(char *pszWeekday, uint8_t nWeekday)
   }
 }
 
-static bool RefreshDate(void)
+static void RefreshDate(void)
 {
   Date &stDate = g_stDate;   //取数已在 FetchAllData() 完成
   uint16_t dataWidth;
@@ -238,8 +238,6 @@ static bool RefreshDate(void)
   //画线，年进度条
   display.fillRect(0, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 2 - 3, stDate.time.percentage, 2, COLOR_BLACK);
   display.fillRect(stDate.time.percentage, SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 2 - 3, SCREEN_WIDTH - stDate.time.percentage, 2, COLOR_RED);
-
-  return true;
 }
 
 static void display_icon_weather(uint16_t x, uint16_t y, char *weatherCode) //天气图标显示
@@ -288,7 +286,7 @@ static void display_icon_weather(uint16_t x, uint16_t y, char *weatherCode) //�
   }
 }
 
-static bool RefreshWeather(void)
+static void RefreshWeather(void)
 {
   Weather &stWeather = g_stWeather;   //取数已在 FetchAllData() 完成
   uint16_t dataWidth;
@@ -348,11 +346,9 @@ static bool RefreshWeather(void)
   display.drawFastHLine(x + 1, temp_y + FONT_SIZE_CHINESE + 3, 5, 0);
   sprintf(disp, "  %s", stWeather.location);
   drawUTF8Centered(x, temp_y + FONT_SIZE_CHINESE_SPACING + 2, disp);
-
-  return true;
 }
 
-static bool RefreshHitokoto(void)
+static void RefreshHitokoto(void)
 {
   Hitokoto &stHitokoto = g_stHitokoto;   //取数已在 FetchAllData() 完成
   uint16_t dataWidth;
@@ -382,11 +378,9 @@ static bool RefreshHitokoto(void)
   dataWidth1 = u8g2Fonts.getUTF8Width(disp1);
   display.drawFastHLine(x - dataWidth1 - 2, y - FONT_SIZE_CHINESE / 2, dataWidth1, 0);
   drawUTF8Centered(x, y, disp);
-
-  return true;
 }
 
-static bool RefreshCoin(void)
+static void RefreshCoin(void)
 {
   CryptoCoin &stCryptoCoin = g_stCoin;   //取数已在 FetchAllData() 完成
   uint16_t dataWidth;
@@ -394,7 +388,7 @@ static bool RefreshCoin(void)
   uint16_t start_y = (SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING * 8)/2; //y起始位置
   char disp[120];
 
-  if (!g_hasCoin) return true; // 加密货币价格获取失败不影响
+  if (!g_hasCoin) return; // 加密货币价格获取失败不影响
 
   u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
   if (strlen(stCryptoCoin.price_btc))
@@ -424,44 +418,16 @@ static bool RefreshCoin(void)
     sprintf(disp, "%s", stCryptoCoin.price_sol);
     drawUTF8Centered(start_x + dataWidth - u8g2Fonts.getUTF8Width(disp), start_y + FONT_SIZE_CHINESE_SPACING*8, disp);
   }
-
-  return true;
 }
 
 
-static bool RefreshBattery(void)
+static void RefreshBattery(void)
 {
   //电量百分比
   uint8_t percentage = g_battery;   //取数已在 FetchAllData() 完成
-  
-  //电量图标
-  int16_t head_width  = 3;
-  int16_t head_height = 6;
-  int16_t body_width  = 24;
-  int16_t body_height = 14;
-  int16_t full_width  = (body_width - 2 - 2) * percentage / 100; //填充宽度
-  int16_t full_height = body_height - 2 - 2; //填充高度，留1像素间隙
-  int16_t x_start = SCREEN_WIDTH - head_width - body_width;
-  int16_t y_start = (FONT_SIZE_CHINESE_LARGE - body_height) / 2 + 2;
-  uint16_t color = COLOR_BLACK; //颜色
-  if(percentage <= 10) color = COLOR_RED; //低于10%使用红色
-  //head
-  int16_t x_head = x_start;
-  int16_t y_head = y_start + (FONT_SIZE_CHINESE_SPACING - body_height)/2 + (body_height - head_height)/2;
-  display.fillRect(x_head, y_head, head_width, head_height, color);
-  //body
-  int16_t x_body = x_head + head_width;
-  int16_t y_body = y_start + (FONT_SIZE_CHINESE_SPACING - body_height)/2;
-  display.drawRect(x_body, y_body, body_width, body_height, color);
-  //full
-  if(percentage >= 5)
-  {
-    int16_t x_full = x_body + 2 + (body_width - 2 - 2) - full_width;
-    int16_t y_full = y_start + (FONT_SIZE_CHINESE_SPACING - full_height)/2;
-    display.fillRect(x_full, y_full, full_width, full_height, color);
-  }
 
-  return true;
+  //电量图标：右上角（头宽 3 + 体宽 24，体高 14）
+  draw_battery_icon(SCREEN_WIDTH - 3 - 24, (FONT_SIZE_CHINESE_LARGE - 14) / 2 + 2, percentage);
 }
 
 extern void display_MainPage(void)
@@ -475,16 +441,17 @@ extern void display_MainPage(void)
   display.firstPage();
   do
   {
-    if(!RefreshDate()) return;//刷新日期
-    if(!RefreshWeather()) return;//刷新天气
-    if(!RefreshHitokoto()) return;//刷新一言
-    if(!RefreshCoin()) return;//刷新加密货币
-    if(!RefreshBattery()) return;//刷新电量
+    RefreshDate();//刷新日期
+    RefreshWeather();//刷新天气
+    RefreshHitokoto();//刷新一言
+    RefreshCoin();//刷新加密货币
+    RefreshBattery();//刷新电量
   }
   while (display.nextPage());
 
-  //更新刷新时间
-  if(GetNTPTime(&ulEpochTime))
+  //更新刷新时间：复用 GetDate 里已取到的 NTP 时间，本轮不再单独查一次
+  ulEpochTime = GetLastEpochTime();
+  if (ulEpochTime != 0)
   {
     GetTime(ulEpochTime, &stTime);
     Serial.printf("NTP Time: %04d/%02d/%02d %02d:%02d:%02d\n", stTime.year, stTime.month, stTime.day, stTime.hour, stTime.minute, stTime.second);

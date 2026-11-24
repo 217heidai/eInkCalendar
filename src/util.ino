@@ -89,20 +89,24 @@ static int8_t utf8_dec_signed(u8g2_font_decode_t *f, uint8_t cnt)
 //步进口径：汉字=u8g2_DrawGlyph 返回值(advance)；非汉字=u8g2_GetGlyphWidth(advance)
 //两者都与库 drawUTF8 内部 drawGlyph 的步进完全一致（不能用 getUTF8Width：它有 issue#16 尾字修正，
 //会把单字符宽度换成"真实像素宽+x_offset"，导致字母/数字步进偏小、字符贴在一起）
+//4 字节字符（如 emoji）：字库无此字形，只消费不绘制、不步进
 extern void drawUTF8Centered(int16_t x, int16_t y, const char *str)
 {
   const char *p = str;
   while (*p)
   {
-    uint16_t enc;
+    uint32_t enc;
     int len;
+    //多字节分支都校验后续字节是 0x80~0xBF：截断的 UTF-8 不会读出字符串末尾
     if ((*p & 0x80) == 0)          { enc = *p; len = 1; }
-    else if ((*p & 0xE0) == 0xC0)  { enc = ((*p & 0x1F) << 6) | (p[1] & 0x3F); len = 2; }
-    else                            { enc = ((*p & 0x0F) << 12) | ((p[1] & 0x3F) << 6) | (p[2] & 0x3F); len = 3; }
+    else if (((*p & 0xE0) == 0xC0) && ((p[1] & 0xC0) == 0x80))  { enc = ((*p & 0x1F) << 6) | (p[1] & 0x3F); len = 2; }
+    else if (((*p & 0xF0) == 0xE0) && ((p[1] & 0xC0) == 0x80) && ((p[2] & 0xC0) == 0x80))  { enc = ((*p & 0x0F) << 12) | ((p[1] & 0x3F) << 6) | (p[2] & 0x3F); len = 3; }
+    else if (((*p & 0xF8) == 0xF0) && ((p[1] & 0xC0) == 0x80) && ((p[2] & 0xC0) == 0x80) && ((p[3] & 0xC0) == 0x80))  { enc = ((*p & 0x07) << 18) | ((p[1] & 0x3F) << 12) | ((p[2] & 0x3F) << 6) | (p[3] & 0x3F); len = 4; }
+    else { p++; continue; } //无效字节/截断的 UTF-8：跳过，保证不越界、不死循环
 
     if (enc >= 0x4E00 && enc <= 0x9FFF)  //仅汉字：字形在字格内上下、左右居中
     {
-      const uint8_t *gd = u8g2_font_get_glyph_data(&u8g2Fonts.u8g2, enc);
+      const uint8_t *gd = u8g2_font_get_glyph_data(&u8g2Fonts.u8g2, (uint16_t)enc);
       if (gd)
       {
         u8g2_font_decode_t dec;
@@ -119,18 +123,52 @@ extern void drawUTF8Centered(int16_t x, int16_t y, const char *str)
         int16_t dx = ((int16_t)delta - (int16_t)w) / 2 - (int16_t)xo;
         //库内部绘制时会再应用 xo/yo：字形左=x+dx+xo，字形顶=(y+dy)-(h+yo)
         int16_t tx = x + dx;
-        x += u8g2_DrawGlyph(&u8g2Fonts.u8g2, tx, y + dy, enc);  //返回值=advance，与库同口径步进
+        x += u8g2_DrawGlyph(&u8g2Fonts.u8g2, tx, y + dy, (uint16_t)enc);  //返回值=advance，与库同口径步进
         p += len;
         continue;
       }
     }
     //非汉字/缺字形：绘制与 drawUTF8 一致，步进=advance（与库 drawUTF8 的 drawGlyph 同口径）
+    //4 字节字符（如 emoji）：字库无此字形，只消费不绘制，避免按截断编码画错字
+    if (len == 4)
+    {
+      p += len;
+      continue;
+    }
     char tmp[4];
     memcpy(tmp, p, len);
     tmp[len] = 0;
     u8g2Fonts.drawUTF8(x, y, tmp);
-    x += u8g2_GetGlyphWidth(&u8g2Fonts.u8g2, enc);
+    x += u8g2_GetGlyphWidth(&u8g2Fonts.u8g2, (uint16_t)enc);
     p += len;
+  }
+}
+
+//画电池图标：x_start/y_start 为电池头左上角；percentage 为电量百分比
+extern void draw_battery_icon(int16_t x_start, int16_t y_start, uint8_t percentage)
+{
+  int16_t head_width  = 3;
+  int16_t head_height = 6;
+  int16_t body_width  = 24;
+  int16_t body_height = 14;
+  int16_t full_width  = (body_width - 2 - 2) * percentage / 100; //填充宽度
+  int16_t full_height = body_height - 2 - 2; //填充高度，留1像素间隙
+  uint16_t color = COLOR_BLACK; //颜色
+  if(percentage <= 10) color = COLOR_RED; //低于10%使用红色
+  //head
+  int16_t x_head = x_start;
+  int16_t y_head = y_start + (FONT_SIZE_CHINESE_SPACING - body_height)/2 + (body_height - head_height)/2;
+  display.fillRect(x_head, y_head, head_width, head_height, color);
+  //body
+  int16_t x_body = x_head + head_width;
+  int16_t y_body = y_start + (FONT_SIZE_CHINESE_SPACING - body_height)/2;
+  display.drawRect(x_body, y_body, body_width, body_height, color);
+  //full
+  if(percentage >= 5)
+  {
+    int16_t x_full = x_body + 2 + (body_width - 2 - 2) - full_width;
+    int16_t y_full = y_start + (FONT_SIZE_CHINESE_SPACING - full_height)/2;
+    display.fillRect(x_full, y_full, full_width, full_height, color);
   }
 }
 
@@ -195,6 +233,14 @@ extern float bat_get_percentage(void)
   return percentage;
 }
 
+
+//带长度保护的拷贝：源串超长时截断，保证 dst 一定有 '\0'；dstSize 为 0 时什么都不做
+extern void strcpy_safe(char *dst, size_t dstSize, const char *src)
+{
+  if (dstSize == 0) return;
+  strncpy(dst, src, dstSize - 1);
+  dst[dstSize - 1] = 0;
+}
 
 // 读取 EEPROM 中的配置
 // EEPROM 储存格式为1字节长度+内容

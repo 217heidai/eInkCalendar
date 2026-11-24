@@ -112,35 +112,8 @@ extern void display_test_weather() //图标测试
 
 static void test_battery(uint8_t percentage, int16_t x_start)
 {
-  //电量百分比
-  //uint8_t percentage = bat_get_percentage();
-
-  //电量图标
-  //int16_t x_start = 3;
   int16_t y_start = SCREEN_HEIGTH - FONT_SIZE_CHINESE_SPACING;
-  int16_t head_width  = 3;
-  int16_t head_height = 6;
-  int16_t body_width  = 24;
-  int16_t body_height = 14;
-  int16_t full_width  = (body_width - 2 - 2) * percentage / 100; //填充宽度
-  int16_t full_height = body_height - 2 - 2; //填充高度，留1像素间隙
-  uint16_t color = COLOR_BLACK; //颜色
-  if(percentage <= 10) color = COLOR_RED; //低于10%使用红色
-  //head
-  int16_t x_head = x_start;
-  int16_t y_head = y_start + (FONT_SIZE_CHINESE_SPACING - body_height)/2 + (body_height - head_height)/2;
-  display.fillRect(x_head, y_head, head_width, head_height, color);
-  //body
-  int16_t x_body = x_head + head_width;
-  int16_t y_body = y_start + (FONT_SIZE_CHINESE_SPACING - body_height)/2;
-  display.drawRect(x_body, y_body, body_width, body_height, color);
-  //full
-  if(percentage >= 5)
-  {
-    int16_t x_full = x_body + 2 + (body_width - 2 - 2) - full_width;
-    int16_t y_full = y_start + (FONT_SIZE_CHINESE_SPACING - full_height)/2;
-    display.fillRect(x_full, y_full, full_width, full_height, color);
-  }
+  draw_battery_icon(x_start, y_start, percentage);
 }
 
 extern void display_test_battery(void)
@@ -210,34 +183,5 @@ extern void display_test_center(void) //sarasa 逐字垂直对齐观察页
 
 extern void display_test_qrcode(void)
 {
-  char disp[256];
-  uint16 dataWidth = 0;
-
-  display.firstPage();
-  do
-  {
-    display.fillScreen(COLOR_WHITE);  // 填充屏幕
-
-    // 配网二维码
-    display.drawInvertedBitmap((SCREEN_WIDTH - 200) / 2, (SCREEN_HEIGTH - 200) / 2, Bitmap_QRcode, 200, 200, COLOR_BLACK);
-
-    // 标题
-    u8g2Fonts.setFont(u8g2_sarasa_16_gb2312);
-    sprintf(disp, "微信扫码配置网络");
-    Serial.println(disp);
-    dataWidth = u8g2Fonts.getUTF8Width(disp);
-    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, (SCREEN_HEIGTH - 200) / 2 - 2, disp);
-
-    // 操作提示
-    u8g2Fonts.setFont(u8g2_font_wqy14_t_gb2312);
-    sprintf(disp, "确保手机连接到2.4GHz WiFi");
-    Serial.println(disp);
-    dataWidth = u8g2Fonts.getUTF8Width(disp);
-    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING, disp);
-    sprintf(disp, "请在3分钟内完成网络配置");
-    Serial.println(disp);
-    dataWidth = u8g2Fonts.getUTF8Width(disp); // 与第一行对齐
-    drawUTF8Centered((SCREEN_WIDTH - dataWidth) / 2, SCREEN_HEIGTH -(SCREEN_HEIGTH - 200) / 2 + FONT_SIZE_CHINESE_SPACING*2, disp);
-  }
-  while (display.nextPage());
+  display_smartConfig(); //与配网屏同一张图，直接复用 wifi.ino 的实现
 }

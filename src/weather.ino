@@ -17,7 +17,7 @@ static bool ParseWeather(String content, Weather *pstWeather)
 
   if (!json["location"].isNull())    //位置
   {
-    strcpy(pstWeather->location, json["location"]);
+    strcpy_safe(pstWeather->location, sizeof(pstWeather->location), json["location"]);
   }
   else
   {
@@ -27,47 +27,47 @@ static bool ParseWeather(String content, Weather *pstWeather)
   }
   if (!json["text_day"].isNull())    //白天天气现象
   {
-    strcpy(pstWeather->text_day, json["text_day"]);
+    strcpy_safe(pstWeather->text_day, sizeof(pstWeather->text_day), json["text_day"]);
   }
   if (!json["code_day"].isNull())    //白天天气代码
   {
-    strcpy(pstWeather->code_day, json["code_day"]);
+    strcpy_safe(pstWeather->code_day, sizeof(pstWeather->code_day), json["code_day"]);
   }
   if (!json["text_night"].isNull())    //晚间天气现象
   {
-    strcpy(pstWeather->text_night, json["text_night"]);
+    strcpy_safe(pstWeather->text_night, sizeof(pstWeather->text_night), json["text_night"]);
   }
   if (!json["code_night"].isNull())    //晚间天气代码
   {
-    strcpy(pstWeather->code_night, json["code_night"]);
+    strcpy_safe(pstWeather->code_night, sizeof(pstWeather->code_night), json["code_night"]);
   }
   if (!json["high"].isNull())
   {
-    strcpy(pstWeather->high, json["high"]);  //最高温度
+    strcpy_safe(pstWeather->high, sizeof(pstWeather->high), json["high"]);  //最高温度
   }
   if (!json["low"].isNull())             //最低温度
   {
-    strcpy(pstWeather->low, json["low"]);
+    strcpy_safe(pstWeather->low, sizeof(pstWeather->low), json["low"]);
   }
   if (!json["humidity"].isNull())                //湿度
   {
-    strcpy(pstWeather->humidity, json["humidity"]);
+    strcpy_safe(pstWeather->humidity, sizeof(pstWeather->humidity), json["humidity"]);
   }
   if (!json["wind_direction"].isNull())                //风向
   {
-    strcpy(pstWeather->wind_direction, json["wind_direction"]);
+    strcpy_safe(pstWeather->wind_direction, sizeof(pstWeather->wind_direction), json["wind_direction"]);
   }
   if (!json["wind_speed"].isNull())                //风速，单位km/h
   {
-    strcpy(pstWeather->wind_speed, json["wind_speed"]);
+    strcpy_safe(pstWeather->wind_speed, sizeof(pstWeather->wind_speed), json["wind_speed"]);
   }
   if (!json["dressing"].isNull())                //穿衣
   {
-    strcpy(pstWeather->dressing, json["dressing"]);
+    strcpy_safe(pstWeather->dressing, sizeof(pstWeather->dressing), json["dressing"]);
   }
   if (!json["uv"].isNull())                //紫外线指数
   {
-    strcpy(pstWeather->uv, json["uv"]);
+    strcpy_safe(pstWeather->uv, sizeof(pstWeather->uv), json["uv"]);
   }
   json.clear();
   return true;

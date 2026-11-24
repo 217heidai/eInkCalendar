@@ -1,6 +1,6 @@
 static bool ParseLocation(String content, char *pszLocation)
 {
-  StaticJsonDocument<128> json; //静态分配，不占堆；1个键值字段
+  StaticJsonDocument<1024> json; //静态分配，不占堆；接口实际返回15个字段约314字节，ArduinoJson 6 下128/256/512 都会 NoMemory，1024 才够
   //content.replace("\\", "");
   //Serial.println(content);
   //content = content.substring(1, content.length()-1);

@@ -23,19 +23,19 @@ static bool ParseCoin(const String &content, CryptoCoin *pstCryptoCoin)
   }
   if(!json["BTC"].isNull())
   {
-    strcpy(pstCryptoCoin->price_btc, json["BTC"]);
+    strcpy_safe(pstCryptoCoin->price_btc, sizeof(pstCryptoCoin->price_btc), json["BTC"]);
   }
   if(!json["ETH"].isNull())
   {
-    strcpy(pstCryptoCoin->price_eth, json["ETH"]);
+    strcpy_safe(pstCryptoCoin->price_eth, sizeof(pstCryptoCoin->price_eth), json["ETH"]);
   }
   if(!json["BNB"].isNull())
   {
-    strcpy(pstCryptoCoin->price_bnb, json["BNB"]);
+    strcpy_safe(pstCryptoCoin->price_bnb, sizeof(pstCryptoCoin->price_bnb), json["BNB"]);
   }
   if(!json["SOL"].isNull())
   {
-    strcpy(pstCryptoCoin->price_sol, json["SOL"]);
+    strcpy_safe(pstCryptoCoin->price_sol, sizeof(pstCryptoCoin->price_sol), json["SOL"]);
   }
 
   json.clear();
